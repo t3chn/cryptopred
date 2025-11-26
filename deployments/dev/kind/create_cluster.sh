@@ -20,3 +20,8 @@ KIND_EXPERIMENTAL_DOCKER_NETWORK=crypto-predictor-network kind create cluster --
 echo "Installing Kafka..."
 chmod +x ./install_kafka.sh
 ./install_kafka.sh
+
+# 6. Install Kafka UI
+echo "Installing Kafka UI..."
+chmod +x ./install_kafka_ui.sh
+./install_kafka_ui.sh
