@@ -19,7 +19,10 @@ from binance_sdk_derivatives_trading_usds_futures import (
     TooManyRequestsError,
     RateLimitBanError,
 )
-from binance_common.configuration import ConfigurationRestAPI, ConfigurationWebSocketStreams
+from binance_common.configuration import (
+    ConfigurationRestAPI,
+    ConfigurationWebSocketStreams,
+)
 
 from trades.trade import Trade
 
@@ -117,10 +120,7 @@ class BinanceHistoricalClient:
                 self._symbol_state[symbol] = end_time
                 return []
 
-            trades = [
-                Trade.from_sdk_rest_api(symbol, item)
-                for item in data
-            ]
+            trades = [Trade.from_sdk_rest_api(symbol, item) for item in data]
 
             # Update cursor to continue from last trade
             if trades:
@@ -143,7 +143,7 @@ class BinanceHistoricalClient:
 
         except Exception as e:
             logger.error(f"Error fetching trades for {symbol}: {e}")
-            delay = min(2 ** self._consecutive_failures, 60)
+            delay = min(2**self._consecutive_failures, 60)
             time.sleep(delay)
             self._consecutive_failures += 1
             return []
@@ -180,7 +180,9 @@ class BinanceLiveClient:
 
     async def start(self):
         """Start WebSocket connection and subscribe to aggregate trade streams."""
-        logger.info(f"Connecting to Binance Futures WebSocket for {len(self.product_ids)} symbols")
+        logger.info(
+            f"Connecting to Binance Futures WebSocket for {len(self.product_ids)} symbols"
+        )
 
         self._connection = await self.client.websocket_streams.create_connection()
         self._is_running = True

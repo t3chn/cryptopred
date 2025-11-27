@@ -1,23 +1,21 @@
 [project]
-name = "trades"
+name = "candles"
 version = "0.1.0"
-description = "Binance trades ingestion service"
+description = "Candles aggregation service - transforms trades into OHLCV candles"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "binance-sdk-derivatives-trading-usds-futures",
     "loguru",
     "quixstreams",
     "pydantic-settings",
 ]
 
 [project.scripts]
-trades = "trades.main:main"
+candles = "candles.main:main"
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
-    "pytest-asyncio>=0.24",
     "pytest-cov>=6.0",
     "pytest-mock>=3.14",
 ]
@@ -27,9 +25,4 @@ requires = ["uv_build>=0.9.8,<0.10.0"]
 build-backend = "uv_build"
 
 [tool.pytest.ini_options]
-asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
-markers = [
-    "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
-]

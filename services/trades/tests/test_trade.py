@@ -1,6 +1,5 @@
 """Tests for trades.trade module."""
 
-import datetime
 from dataclasses import dataclass
 
 import pytest
@@ -182,7 +181,9 @@ class TestFromSdkRestApi:
         assert trade.quantity == 0.123
         assert trade.timestamp_ms == 1732636800000
 
-    def test_from_sdk_rest_api_missing_timestamp(self, mock_rest_api_response_empty_fields):
+    def test_from_sdk_rest_api_missing_timestamp(
+        self, mock_rest_api_response_empty_fields
+    ):
         """Test SDK response with missing timestamp."""
         trade = Trade.from_sdk_rest_api("BTCUSDT", mock_rest_api_response_empty_fields)
         assert trade.timestamp_ms == 0
@@ -192,7 +193,9 @@ class TestFromSdkRestApi:
         trade = Trade.from_sdk_rest_api("BTCUSDT", mock_rest_api_response_empty_fields)
         assert trade.price == 0.0
 
-    def test_from_sdk_rest_api_missing_quantity(self, mock_rest_api_response_empty_fields):
+    def test_from_sdk_rest_api_missing_quantity(
+        self, mock_rest_api_response_empty_fields
+    ):
         """Test SDK response with missing quantity."""
         trade = Trade.from_sdk_rest_api("BTCUSDT", mock_rest_api_response_empty_fields)
         assert trade.quantity == 0.0
@@ -275,22 +278,30 @@ class TestFromSdkWebsocket:
         assert trade.quantity == 0.123
         assert trade.timestamp_ms == 1732636800000
 
-    def test_from_sdk_websocket_missing_symbol(self, mock_websocket_response_empty_fields):
+    def test_from_sdk_websocket_missing_symbol(
+        self, mock_websocket_response_empty_fields
+    ):
         """Test SDK response with missing symbol."""
         trade = Trade.from_sdk_websocket(mock_websocket_response_empty_fields)
         assert trade.product_id == ""
 
-    def test_from_sdk_websocket_missing_timestamp(self, mock_websocket_response_empty_fields):
+    def test_from_sdk_websocket_missing_timestamp(
+        self, mock_websocket_response_empty_fields
+    ):
         """Test SDK response with missing timestamp."""
         trade = Trade.from_sdk_websocket(mock_websocket_response_empty_fields)
         assert trade.timestamp_ms == 0
 
-    def test_from_sdk_websocket_missing_price(self, mock_websocket_response_empty_fields):
+    def test_from_sdk_websocket_missing_price(
+        self, mock_websocket_response_empty_fields
+    ):
         """Test SDK response with missing price."""
         trade = Trade.from_sdk_websocket(mock_websocket_response_empty_fields)
         assert trade.price == 0.0
 
-    def test_from_sdk_websocket_missing_quantity(self, mock_websocket_response_empty_fields):
+    def test_from_sdk_websocket_missing_quantity(
+        self, mock_websocket_response_empty_fields
+    ):
         """Test SDK response with missing quantity."""
         trade = Trade.from_sdk_websocket(mock_websocket_response_empty_fields)
         assert trade.quantity == 0.0

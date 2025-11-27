@@ -1,9 +1,7 @@
 """Shared test fixtures for trades service tests."""
 
-import asyncio
 from dataclasses import dataclass
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -172,12 +170,8 @@ def mock_sdk_rest_api():
     response.rate_limits = {"REQUEST_WEIGHT": {"limit": 2400, "used": 1}}
     response.data = MagicMock(
         return_value=[
-            MockRestApiResponse(
-                a=1, p="97500.00", q="0.1", T=1732636800000, m=True
-            ),
-            MockRestApiResponse(
-                a=2, p="97501.00", q="0.2", T=1732636801000, m=False
-            ),
+            MockRestApiResponse(a=1, p="97500.00", q="0.1", T=1732636800000, m=True),
+            MockRestApiResponse(a=2, p="97501.00", q="0.2", T=1732636801000, m=False),
         ]
     )
     rest_api.compressed_aggregate_trades_list = MagicMock(return_value=response)

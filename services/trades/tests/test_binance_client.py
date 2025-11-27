@@ -2,7 +2,6 @@
 
 import asyncio
 import time
-from dataclasses import dataclass
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -44,7 +43,9 @@ class TestBinanceHistoricalClientInit:
             client = BinanceHistoricalClient(mock_settings)
             assert client.end_time_ms > 0
             # Start time should be approximately last_n_days ago
-            expected_start = int((time.time() - mock_settings.last_n_days * 24 * 60 * 60) * 1000)
+            expected_start = int(
+                (time.time() - mock_settings.last_n_days * 24 * 60 * 60) * 1000
+            )
             for symbol, start in client._symbol_state.items():
                 assert abs(start - expected_start) < 1000  # Within 1 second
 
@@ -84,11 +85,13 @@ class TestBinanceHistoricalClientInit:
 
     def test_init_with_api_credentials(self, mock_settings_with_credentials):
         """Test initialization with API credentials."""
-        with patch("trades.binance_client.DerivativesTradingUsdsFutures") as mock_client:
+        with patch(
+            "trades.binance_client.DerivativesTradingUsdsFutures"
+        ) as mock_client:
             from trades.binance_client import BinanceHistoricalClient
 
-            client = BinanceHistoricalClient(mock_settings_with_credentials)
-            # Verify client was created (we can't easily check the config passed)
+            _client = BinanceHistoricalClient(mock_settings_with_credentials)
+            assert _client is not None
             assert mock_client.called
 
     def test_init_single_symbol(self, mock_settings_single_symbol):
@@ -219,7 +222,9 @@ class TestBinanceHistoricalClientGetTrades:
 
     def test_get_trades_successful_fetch(self, mock_settings, mock_sdk_rest_api):
         """Test successful trade fetch."""
-        with patch("trades.binance_client.DerivativesTradingUsdsFutures") as mock_client_class:
+        with patch(
+            "trades.binance_client.DerivativesTradingUsdsFutures"
+        ) as mock_client_class:
             mock_client = MagicMock()
             mock_client.rest_api = mock_sdk_rest_api
             mock_client_class.return_value = mock_client
@@ -236,12 +241,16 @@ class TestBinanceHistoricalClientGetTrades:
 
     def test_get_trades_empty_response(self, mock_settings):
         """Test handling empty response."""
-        with patch("trades.binance_client.DerivativesTradingUsdsFutures") as mock_client_class:
+        with patch(
+            "trades.binance_client.DerivativesTradingUsdsFutures"
+        ) as mock_client_class:
             mock_client = MagicMock()
             response = MagicMock()
             response.rate_limits = {}
             response.data = MagicMock(return_value=[])
-            mock_client.rest_api.compressed_aggregate_trades_list.return_value = response
+            mock_client.rest_api.compressed_aggregate_trades_list.return_value = (
+                response
+            )
             mock_client_class.return_value = mock_client
 
             from trades.binance_client import BinanceHistoricalClient
@@ -258,11 +267,15 @@ class TestBinanceHistoricalClientGetTrades:
 
     def test_get_trades_rate_limit_error(self, mock_settings):
         """Test handling TooManyRequestsError."""
-        with patch("trades.binance_client.DerivativesTradingUsdsFutures") as mock_client_class:
+        with patch(
+            "trades.binance_client.DerivativesTradingUsdsFutures"
+        ) as mock_client_class:
             from trades.binance_client import TooManyRequestsError
 
             mock_client = MagicMock()
-            mock_client.rest_api.compressed_aggregate_trades_list.side_effect = TooManyRequestsError("Rate limit")
+            mock_client.rest_api.compressed_aggregate_trades_list.side_effect = (
+                TooManyRequestsError("Rate limit")
+            )
             mock_client_class.return_value = mock_client
 
             from trades.binance_client import BinanceHistoricalClient
@@ -278,11 +291,15 @@ class TestBinanceHistoricalClientGetTrades:
 
     def test_get_trades_ip_ban_error(self, mock_settings):
         """Test handling RateLimitBanError."""
-        with patch("trades.binance_client.DerivativesTradingUsdsFutures") as mock_client_class:
+        with patch(
+            "trades.binance_client.DerivativesTradingUsdsFutures"
+        ) as mock_client_class:
             from trades.binance_client import RateLimitBanError
 
             mock_client = MagicMock()
-            mock_client.rest_api.compressed_aggregate_trades_list.side_effect = RateLimitBanError("IP banned")
+            mock_client.rest_api.compressed_aggregate_trades_list.side_effect = (
+                RateLimitBanError("IP banned")
+            )
             mock_client_class.return_value = mock_client
 
             from trades.binance_client import BinanceHistoricalClient
@@ -297,9 +314,13 @@ class TestBinanceHistoricalClientGetTrades:
 
     def test_get_trades_generic_exception(self, mock_settings):
         """Test handling generic exceptions."""
-        with patch("trades.binance_client.DerivativesTradingUsdsFutures") as mock_client_class:
+        with patch(
+            "trades.binance_client.DerivativesTradingUsdsFutures"
+        ) as mock_client_class:
             mock_client = MagicMock()
-            mock_client.rest_api.compressed_aggregate_trades_list.side_effect = Exception("Unknown error")
+            mock_client.rest_api.compressed_aggregate_trades_list.side_effect = (
+                Exception("Unknown error")
+            )
             mock_client_class.return_value = mock_client
 
             from trades.binance_client import BinanceHistoricalClient
@@ -315,9 +336,13 @@ class TestBinanceHistoricalClientGetTrades:
 
     def test_get_trades_exponential_backoff(self, mock_settings):
         """Test exponential backoff on failures."""
-        with patch("trades.binance_client.DerivativesTradingUsdsFutures") as mock_client_class:
+        with patch(
+            "trades.binance_client.DerivativesTradingUsdsFutures"
+        ) as mock_client_class:
             mock_client = MagicMock()
-            mock_client.rest_api.compressed_aggregate_trades_list.side_effect = Exception("Error")
+            mock_client.rest_api.compressed_aggregate_trades_list.side_effect = (
+                Exception("Error")
+            )
             mock_client_class.return_value = mock_client
 
             from trades.binance_client import BinanceHistoricalClient
@@ -333,9 +358,13 @@ class TestBinanceHistoricalClientGetTrades:
 
     def test_get_trades_backoff_capped_at_60(self, mock_settings):
         """Test backoff is capped at 60 seconds."""
-        with patch("trades.binance_client.DerivativesTradingUsdsFutures") as mock_client_class:
+        with patch(
+            "trades.binance_client.DerivativesTradingUsdsFutures"
+        ) as mock_client_class:
             mock_client = MagicMock()
-            mock_client.rest_api.compressed_aggregate_trades_list.side_effect = Exception("Error")
+            mock_client.rest_api.compressed_aggregate_trades_list.side_effect = (
+                Exception("Error")
+            )
             mock_client_class.return_value = mock_client
 
             from trades.binance_client import BinanceHistoricalClient
@@ -348,9 +377,13 @@ class TestBinanceHistoricalClientGetTrades:
                 client.get_trades()
                 mock_sleep.assert_called_with(60)
 
-    def test_get_trades_resets_consecutive_failures(self, mock_settings, mock_sdk_rest_api):
+    def test_get_trades_resets_consecutive_failures(
+        self, mock_settings, mock_sdk_rest_api
+    ):
         """Test successful fetch resets consecutive failures."""
-        with patch("trades.binance_client.DerivativesTradingUsdsFutures") as mock_client_class:
+        with patch(
+            "trades.binance_client.DerivativesTradingUsdsFutures"
+        ) as mock_client_class:
             mock_client = MagicMock()
             mock_client.rest_api = mock_sdk_rest_api
             mock_client_class.return_value = mock_client
@@ -367,7 +400,9 @@ class TestBinanceHistoricalClientGetTrades:
 
     def test_get_trades_updates_cursor(self, mock_settings, mock_sdk_rest_api):
         """Test cursor is updated from last trade."""
-        with patch("trades.binance_client.DerivativesTradingUsdsFutures") as mock_client_class:
+        with patch(
+            "trades.binance_client.DerivativesTradingUsdsFutures"
+        ) as mock_client_class:
             mock_client = MagicMock()
             mock_client.rest_api = mock_sdk_rest_api
             mock_client_class.return_value = mock_client
@@ -384,7 +419,9 @@ class TestBinanceHistoricalClientGetTrades:
 
     def test_get_trades_sets_done_when_all_complete(self, mock_settings):
         """Test is_done is set when all symbols complete."""
-        with patch("trades.binance_client.DerivativesTradingUsdsFutures") as mock_client_class:
+        with patch(
+            "trades.binance_client.DerivativesTradingUsdsFutures"
+        ) as mock_client_class:
             mock_client_class.return_value = MagicMock()
 
             from trades.binance_client import BinanceHistoricalClient
@@ -497,9 +534,13 @@ class TestBinanceLiveClientInit:
 class TestBinanceLiveClientStart:
     """Test BinanceLiveClient.start method."""
 
-    async def test_start_creates_connection(self, mock_settings, mock_websocket_connection):
+    async def test_start_creates_connection(
+        self, mock_settings, mock_websocket_connection
+    ):
         """Test start creates WebSocket connection."""
-        with patch("trades.binance_client.DerivativesTradingUsdsFutures") as mock_client_class:
+        with patch(
+            "trades.binance_client.DerivativesTradingUsdsFutures"
+        ) as mock_client_class:
             mock_client = MagicMock()
             mock_client.websocket_streams.create_connection = AsyncMock(
                 return_value=mock_websocket_connection
@@ -515,9 +556,13 @@ class TestBinanceLiveClientStart:
 
             mock_client.websocket_streams.create_connection.assert_called_once()
 
-    async def test_start_sets_is_running(self, mock_settings, mock_websocket_connection):
+    async def test_start_sets_is_running(
+        self, mock_settings, mock_websocket_connection
+    ):
         """Test start sets _is_running to True."""
-        with patch("trades.binance_client.DerivativesTradingUsdsFutures") as mock_client_class:
+        with patch(
+            "trades.binance_client.DerivativesTradingUsdsFutures"
+        ) as mock_client_class:
             mock_client = MagicMock()
             mock_client.websocket_streams.create_connection = AsyncMock(
                 return_value=mock_websocket_connection
@@ -533,9 +578,13 @@ class TestBinanceLiveClientStart:
 
             assert client._is_running is True
 
-    async def test_start_subscribes_to_streams(self, mock_settings, mock_websocket_connection):
+    async def test_start_subscribes_to_streams(
+        self, mock_settings, mock_websocket_connection
+    ):
         """Test start subscribes to aggregate trade streams."""
-        with patch("trades.binance_client.DerivativesTradingUsdsFutures") as mock_client_class:
+        with patch(
+            "trades.binance_client.DerivativesTradingUsdsFutures"
+        ) as mock_client_class:
             mock_client = MagicMock()
             mock_client.websocket_streams.create_connection = AsyncMock(
                 return_value=mock_websocket_connection
@@ -552,13 +601,19 @@ class TestBinanceLiveClientStart:
             # Should subscribe for each symbol
             assert mock_websocket_connection.aggregate_trade_streams.call_count == 2
 
-    async def test_start_registers_handlers(self, mock_settings, mock_websocket_connection):
+    async def test_start_registers_handlers(
+        self, mock_settings, mock_websocket_connection
+    ):
         """Test start registers message handlers."""
         stream = AsyncMock()
         stream.on = MagicMock()
-        mock_websocket_connection.aggregate_trade_streams = AsyncMock(return_value=stream)
+        mock_websocket_connection.aggregate_trade_streams = AsyncMock(
+            return_value=stream
+        )
 
-        with patch("trades.binance_client.DerivativesTradingUsdsFutures") as mock_client_class:
+        with patch(
+            "trades.binance_client.DerivativesTradingUsdsFutures"
+        ) as mock_client_class:
             mock_client = MagicMock()
             mock_client.websocket_streams.create_connection = AsyncMock(
                 return_value=mock_websocket_connection
@@ -577,7 +632,9 @@ class TestBinanceLiveClientStart:
 
     async def test_start_stores_streams(self, mock_settings, mock_websocket_connection):
         """Test start stores streams in _streams list."""
-        with patch("trades.binance_client.DerivativesTradingUsdsFutures") as mock_client_class:
+        with patch(
+            "trades.binance_client.DerivativesTradingUsdsFutures"
+        ) as mock_client_class:
             mock_client = MagicMock()
             mock_client.websocket_streams.create_connection = AsyncMock(
                 return_value=mock_websocket_connection
@@ -616,13 +673,15 @@ class TestBinanceLiveClientHandleTrade:
             client = BinanceLiveClient(mock_settings)
             # Create queue with max size 0 to force full
             client._trade_queue = asyncio.Queue(maxsize=1)
-            client._trade_queue.put_nowait(Trade(
-                product_id="TEST",
-                price=1.0,
-                quantity=1.0,
-                timestamp="2024-01-01T00:00:00Z",
-                timestamp_ms=0,
-            ))
+            client._trade_queue.put_nowait(
+                Trade(
+                    product_id="TEST",
+                    price=1.0,
+                    quantity=1.0,
+                    timestamp="2024-01-01T00:00:00Z",
+                    timestamp_ms=0,
+                )
+            )
 
             # Should not raise, just log warning
             client._handle_trade(mock_websocket_response, "btcusdt")
@@ -637,14 +696,18 @@ class TestBinanceLiveClientHandleTrade:
             # Pass invalid data that will cause exception
             invalid_data = MagicMock()
             invalid_data.s = None
-            invalid_data.p = "invalid"  # Will cause float conversion error if not handled
+            invalid_data.p = (
+                "invalid"  # Will cause float conversion error if not handled
+            )
             invalid_data.q = None
             invalid_data.T = None
 
             # Should not raise
             client._handle_trade(invalid_data, "btcusdt")
 
-    def test_handle_trade_creates_correct_trade(self, mock_settings, mock_websocket_response):
+    def test_handle_trade_creates_correct_trade(
+        self, mock_settings, mock_websocket_response
+    ):
         """Test created trade has correct values."""
         with patch("trades.binance_client.DerivativesTradingUsdsFutures"):
             from trades.binance_client import BinanceLiveClient
@@ -669,13 +732,15 @@ class TestBinanceLiveClientGetTradesAsync:
             client = BinanceLiveClient(mock_settings)
             # Add some trades to queue
             for i in range(5):
-                client._trade_queue.put_nowait(Trade(
-                    product_id=f"TEST{i}",
-                    price=float(i),
-                    quantity=1.0,
-                    timestamp="2024-01-01T00:00:00Z",
-                    timestamp_ms=0,
-                ))
+                client._trade_queue.put_nowait(
+                    Trade(
+                        product_id=f"TEST{i}",
+                        price=float(i),
+                        quantity=1.0,
+                        timestamp="2024-01-01T00:00:00Z",
+                        timestamp_ms=0,
+                    )
+                )
 
             result = await client.get_trades_async()
 
@@ -692,13 +757,15 @@ class TestBinanceLiveClientGetTradesAsync:
             # Add trade after a delay
             async def add_trade():
                 await asyncio.sleep(0.1)
-                client._trade_queue.put_nowait(Trade(
-                    product_id="TEST",
-                    price=1.0,
-                    quantity=1.0,
-                    timestamp="2024-01-01T00:00:00Z",
-                    timestamp_ms=0,
-                ))
+                client._trade_queue.put_nowait(
+                    Trade(
+                        product_id="TEST",
+                        price=1.0,
+                        quantity=1.0,
+                        timestamp="2024-01-01T00:00:00Z",
+                        timestamp_ms=0,
+                    )
+                )
 
             asyncio.create_task(add_trade())
             result = await client.get_trades_async()
@@ -725,20 +792,24 @@ class TestBinanceLiveClientGetTradesAsync:
             client = BinanceLiveClient(mock_settings)
 
             # Add multiple trades
-            client._trade_queue.put_nowait(Trade(
-                product_id="BTCUSDT",
-                price=97500.0,
-                quantity=1.0,
-                timestamp="2024-01-01T00:00:00Z",
-                timestamp_ms=0,
-            ))
-            client._trade_queue.put_nowait(Trade(
-                product_id="ETHUSDT",
-                price=3500.0,
-                quantity=1.0,
-                timestamp="2024-01-01T00:00:00Z",
-                timestamp_ms=0,
-            ))
+            client._trade_queue.put_nowait(
+                Trade(
+                    product_id="BTCUSDT",
+                    price=97500.0,
+                    quantity=1.0,
+                    timestamp="2024-01-01T00:00:00Z",
+                    timestamp_ms=0,
+                )
+            )
+            client._trade_queue.put_nowait(
+                Trade(
+                    product_id="ETHUSDT",
+                    price=3500.0,
+                    quantity=1.0,
+                    timestamp="2024-01-01T00:00:00Z",
+                    timestamp_ms=0,
+                )
+            )
 
             result = await client.get_trades_async()
 

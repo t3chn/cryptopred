@@ -1,10 +1,10 @@
 # Parameterized Dockerfile for all Python services
 # Build: docker build --build-arg SERVICE_NAME=trades -f docker/Dockerfile.service -t trades .
 
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+# === Build stage ===
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
 
 ARG SERVICE_NAME
-ENV SERVICE_NAME=${SERVICE_NAME}
 
 WORKDIR /app
 
@@ -17,17 +17,27 @@ COPY services/${SERVICE_NAME}/pyproject.toml ./services/${SERVICE_NAME}/
 
 # Install dependencies (cached if pyproject.toml unchanged)
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-install-project --no-dev
+    uv sync --frozen --no-install-project --no-dev --package ${SERVICE_NAME}
 
 # Copy only the specific service code
 COPY services/${SERVICE_NAME} ./services/${SERVICE_NAME}
 
-# Install the project
+# Install the project (including entry points)
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev
+    uv sync --frozen --no-dev --package ${SERVICE_NAME}
+
+# === Runtime stage ===
+FROM python:3.12-slim-bookworm
+
+ARG SERVICE_NAME
+ENV SERVICE_NAME=${SERVICE_NAME}
+
+WORKDIR /app
+
+# Copy only the virtual environment and service code from builder
+COPY --from=builder /app/.venv /app/.venv
+COPY --from=builder /app/services/${SERVICE_NAME} /app/services/${SERVICE_NAME}
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-ENTRYPOINT []
-
-CMD ["sh", "-c", "exec uv run /app/services/${SERVICE_NAME}/src/${SERVICE_NAME}/main.py"]
+CMD ["sh", "-c", "exec ${SERVICE_NAME}"]
