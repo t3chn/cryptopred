@@ -43,12 +43,7 @@ data:
   KAFKA_OUTPUT_TOPIC: "news_sentiment"
   KAFKA_CONSUMER_GROUP: "news_sentiment_consumer"
   OPENAI_MODEL: "gpt-4o-mini"
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: news-sentiment-secrets
-  namespace: default
-type: Opaque
-stringData:
-  OPENAI_API_KEY: "YOUR_OPENAI_API_KEY_HERE"
+# Secret must be created manually (not in repo for security):
+# kubectl create secret generic news-sentiment-secrets \
+#   --from-literal=OPENAI_API_KEY=sk-xxx \
+#   -n default

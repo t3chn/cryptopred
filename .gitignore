@@ -8,3 +8,26 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Secrets - NEVER commit these!
+.env
+.env.*
+!.env.example
+*.env
+secrets.yaml
+*-secrets.yaml
+*.secret
+*.key
+
+# API keys
+*_API_KEY*
+*api_key*
+
+# Coverage
+.coverage
+htmlcov/
+
+# IDE
+.idea/
+.vscode/
+*.swp
