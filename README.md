@@ -9,9 +9,22 @@
 </p>
 
 <p align="center">
+  <img src="https://img.shields.io/badge/python-3.13-blue?logo=python&logoColor=white" alt="Python 3.13"/>
+  <img src="https://img.shields.io/badge/kubernetes-ready-326CE5?logo=kubernetes&logoColor=white" alt="Kubernetes"/>
+  <img src="https://img.shields.io/badge/kafka-streaming-231F20?logo=apachekafka&logoColor=white" alt="Kafka"/>
+  <img src="https://img.shields.io/badge/LightGBM-ML-9cf" alt="LightGBM"/>
+  <img src="https://img.shields.io/badge/MLflow-tracking-0194E2?logo=mlflow&logoColor=white" alt="MLflow"/>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/license-proprietary-red" alt="License"/>
+  <img src="https://img.shields.io/badge/status-active-success" alt="Status"/>
+</p>
+
+<p align="center">
   <a href="#key-features">Features</a> •
   <a href="#how-it-works">How It Works</a> •
-  <a href="#quick-start">Quick Start</a> •
+  <a href="#tech-stack">Tech Stack</a> •
   <a href="docs/user-guide.md">User Guide</a> •
   <a href="docs/technical.md">Technical Docs</a>
 </p>
@@ -70,38 +83,18 @@ Grafana dashboards for monitoring data pipelines, model performance, and predict
 
 ---
 
-## Quick Start
+## Tech Stack
 
-### Prerequisites
-- Docker & Docker Compose
-- Kubernetes (kind for local development)
-- Python 3.13+
-
-### Local Development
-
-```bash
-# Clone the repository
-git clone https://github.com/your-org/cryptopred.git
-cd cryptopred
-
-# Create local Kubernetes cluster
-cd deployments/dev/kind
-./create_cluster.sh
-
-# Deploy data pipeline
-./deploy-kafka.sh
-./deploy-risingwave.sh
-./deploy-trades.sh
-
-# Deploy ML components
-./deploy-predictor.sh
-./deploy-lunarcrush.sh
-
-# Verify data flow
-./test-e2e-dataflow.sh
-```
-
-See the [User Guide](docs/user-guide.md) for detailed setup instructions.
+| Component | Technology |
+|-----------|------------|
+| **Language** | Python 3.13 |
+| **ML Framework** | LightGBM, scikit-learn, Optuna |
+| **Streaming** | Apache Kafka (Strimzi) |
+| **Feature Store** | RisingWave (streaming SQL) |
+| **MLOps** | MLflow |
+| **Orchestration** | Kubernetes |
+| **Monitoring** | Grafana, Prometheus |
+| **Data Source** | Binance API, LunarCrush API |
 
 ---
 
@@ -143,7 +136,6 @@ Additional pairs can be configured via environment variables.
 |----------|-------------|
 | [User Guide](docs/user-guide.md) | Setup, configuration, and daily operations |
 | [Technical Documentation](docs/technical.md) | Architecture, API reference, development guide |
-| [Contributing](CONTRIBUTING.md) | How to contribute to the project |
 
 ---
 

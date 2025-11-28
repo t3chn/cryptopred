@@ -77,49 +77,28 @@ git clone https://github.com/your-org/cryptopred.git
 cd cryptopred
 ```
 
-### Step 3: Create Kubernetes Cluster
+### Step 3: Create Cluster and Deploy Everything
+
+Run the single setup command that installs all components:
 
 ```bash
 cd deployments/dev/kind
 ./create_cluster.sh
 ```
 
-This creates a local Kubernetes cluster named `cryptopred`. Wait for the script to complete (about 2-3 minutes).
+This script will:
+1. Check prerequisites (docker, kind, kubectl, helm, psql)
+2. Create a local Kubernetes cluster named `cryptopred`
+3. Install Kafka (Strimzi) + Kafka UI
+4. Install RisingWave (streaming database)
+5. Apply database schemas
+6. Install MLflow (experiment tracking)
+7. Install Grafana (monitoring)
+8. Deploy application services (trades, predictor)
 
-### Step 4: Deploy Infrastructure
+The full setup takes about 10-15 minutes. You'll see progress for each step.
 
-Deploy the required infrastructure components:
-
-```bash
-# Deploy message broker
-./deploy-kafka.sh
-
-# Deploy streaming database
-./deploy-risingwave.sh
-
-# Deploy ML experiment tracking
-./deploy-mlflow.sh
-
-# Deploy monitoring
-./deploy-monitoring.sh
-```
-
-Each script will show progress. Wait for "Deployment complete" before running the next one.
-
-### Step 5: Deploy Application Services
-
-```bash
-# Deploy trade data ingestion
-./deploy-trades.sh
-
-# Deploy ML predictor
-./deploy-predictor.sh
-
-# Optional: Deploy sentiment data
-./deploy-lunarcrush.sh
-```
-
-### Step 6: Verify Installation
+### Step 4: Verify Installation
 
 Run the end-to-end test to verify everything is working:
 
@@ -128,6 +107,16 @@ Run the end-to-end test to verify everything is working:
 ```
 
 You should see `[PASS]` for all critical checks.
+
+### Step 5: Optional - Deploy LunarCrush (Sentiment Data)
+
+To enable social sentiment features:
+
+```bash
+./deploy-lunarcrush.sh
+```
+
+Note: Requires LunarCrush API key (see Configuration section).
 
 ---
 
