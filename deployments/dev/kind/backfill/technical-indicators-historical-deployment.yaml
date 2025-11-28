@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: technical-indicators-historical
+  namespace: cryptopred
+  labels:
+    app: technical-indicators-historical
+    component: backfill
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: technical-indicators-historical
+  template:
+    metadata:
+      labels:
+        app: technical-indicators-historical
+        component: backfill
+    spec:
+      containers:
+        - name: technical-indicators
+          image: technical-indicators:latest
+          imagePullPolicy: Never
+          env:
+            - name: KAFKA_BROKER_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: backfill-config
+                  key: KAFKA_BROKER_ADDRESS
+            - name: KAFKA_INPUT_TOPIC
+              valueFrom:
+                configMapKeyRef:
+                  name: backfill-config
+                  key: CANDLES_TOPIC
+            - name: KAFKA_OUTPUT_TOPIC
+              valueFrom:
+                configMapKeyRef:
+                  name: backfill-config
+                  key: TECHNICAL_INDICATORS_TOPIC
+            - name: KAFKA_CONSUMER_GROUP
+              valueFrom:
+                configMapKeyRef:
+                  name: backfill-config
+                  key: TECHNICAL_INDICATORS_CONSUMER_GROUP
+            - name: CANDLE_SECONDS
+              valueFrom:
+                configMapKeyRef:
+                  name: backfill-config
+                  key: CANDLE_SECONDS
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      restartPolicy: Always

@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backfill-config
+  namespace: cryptopred
+data:
+  # Kafka connection
+  KAFKA_BROKER_ADDRESS: "kafka-kafka-bootstrap.kafka.svc.cluster.local:9092"
+
+  # Historical topics (separate from live to avoid mixing data)
+  TRADES_TOPIC: "trades_historical"
+  CANDLES_TOPIC: "candles_historical"
+  TECHNICAL_INDICATORS_TOPIC: "technical_indicators"
+
+  # Historical data settings
+  LAST_N_DAYS: "60"
+  CANDLE_SECONDS: "60"
+
+  # Mode flag
+  LIVE_OR_HISTORICAL: "historical"
+
+  # Consumer groups for historical processing
+  CANDLES_CONSUMER_GROUP: "candles-historical-group"
+  TECHNICAL_INDICATORS_CONSUMER_GROUP: "technical-indicators-historical-group"
