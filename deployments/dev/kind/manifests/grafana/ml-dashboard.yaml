@@ -1,0 +1,303 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-ml
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+  annotations:
+    grafana_folder: "ML"
+data:
+  ml-operations.json: |
+    {
+      "annotations": {
+        "list": []
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "links": [],
+      "panels": [
+        {
+          "id": 1,
+          "title": "Data Pipeline Health",
+          "type": "stat",
+          "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+          "datasource": { "type": "postgres", "uid": "risingwave" },
+          "targets": [
+            {
+              "datasource": { "type": "postgres", "uid": "risingwave" },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "SELECT COUNT(*) as total_records FROM technical_indicators WHERE window_start_ms >= extract(epoch from now() - interval '1 hour') * 1000",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "yellow", "value": 10 },
+                  { "color": "green", "value": 60 }
+                ]
+              },
+              "unit": "none",
+              "displayName": "Records (last hour)"
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "center",
+            "textMode": "value_and_name"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Latest Data Timestamp",
+          "type": "stat",
+          "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+          "datasource": { "type": "postgres", "uid": "risingwave" },
+          "targets": [
+            {
+              "datasource": { "type": "postgres", "uid": "risingwave" },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "SELECT to_timestamp(max(window_start_ms) / 1000) as latest_data FROM technical_indicators",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "fixed", "fixedColor": "blue" },
+              "unit": "dateTimeAsIso"
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "textMode": "value"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Trading Pairs Active",
+          "type": "stat",
+          "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 },
+          "datasource": { "type": "postgres", "uid": "risingwave" },
+          "targets": [
+            {
+              "datasource": { "type": "postgres", "uid": "risingwave" },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "SELECT COUNT(DISTINCT pair) as pairs FROM technical_indicators WHERE window_start_ms >= extract(epoch from now() - interval '1 hour') * 1000",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "green", "value": 1 }
+                ]
+              },
+              "displayName": "Active Pairs"
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "textMode": "value_and_name"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Data Volume per Pair (Last Hour)",
+          "type": "table",
+          "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 },
+          "datasource": { "type": "postgres", "uid": "risingwave" },
+          "targets": [
+            {
+              "datasource": { "type": "postgres", "uid": "risingwave" },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "SELECT pair, COUNT(*) as records FROM technical_indicators WHERE window_start_ms >= extract(epoch from now() - interval '1 hour') * 1000 GROUP BY pair ORDER BY records DESC",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm"
+          }
+        },
+        {
+          "id": 5,
+          "title": "BTC Price vs SMA (Feature Quality)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+          "datasource": { "type": "postgres", "uid": "risingwave" },
+          "targets": [
+            {
+              "datasource": { "type": "postgres", "uid": "risingwave" },
+              "editorMode": "code",
+              "format": "time_series",
+              "rawQuery": true,
+              "rawSql": "SELECT\n  to_timestamp(window_start_ms / 1000) as time,\n  close as \"Price\",\n  sma_7 as \"SMA 7\",\n  sma_21 as \"SMA 21\"\nFROM technical_indicators\nWHERE pair = 'BTCUSDT'\n  AND candle_seconds = 60\n  AND window_start_ms >= extract(epoch from now() - interval '3 hours') * 1000\nORDER BY window_start_ms",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": { "displayMode": "list", "placement": "bottom" },
+            "tooltip": { "mode": "multi" }
+          }
+        },
+        {
+          "id": 6,
+          "title": "RSI Distribution",
+          "type": "histogram",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+          "datasource": { "type": "postgres", "uid": "risingwave" },
+          "targets": [
+            {
+              "datasource": { "type": "postgres", "uid": "risingwave" },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "SELECT rsi_14 FROM technical_indicators WHERE pair = 'BTCUSDT' AND candle_seconds = 60 AND rsi_14 IS NOT NULL AND window_start_ms >= extract(epoch from now() - interval '24 hours') * 1000",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" }
+            },
+            "overrides": []
+          },
+          "options": {
+            "bucketSize": 5,
+            "bucketOffset": 0
+          }
+        },
+        {
+          "id": 7,
+          "title": "Feature Completeness",
+          "type": "table",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+          "datasource": { "type": "postgres", "uid": "risingwave" },
+          "targets": [
+            {
+              "datasource": { "type": "postgres", "uid": "risingwave" },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "SELECT\n  'close' as feature, COUNT(*) as total, COUNT(close) as non_null, round(100.0 * COUNT(close) / COUNT(*), 1) as completeness_pct\nFROM technical_indicators WHERE pair = 'BTCUSDT' AND candle_seconds = 60\nUNION ALL\nSELECT 'sma_7', COUNT(*), COUNT(sma_7), round(100.0 * COUNT(sma_7) / COUNT(*), 1)\nFROM technical_indicators WHERE pair = 'BTCUSDT' AND candle_seconds = 60\nUNION ALL\nSELECT 'rsi_14', COUNT(*), COUNT(rsi_14), round(100.0 * COUNT(rsi_14) / COUNT(*), 1)\nFROM technical_indicators WHERE pair = 'BTCUSDT' AND candle_seconds = 60\nUNION ALL\nSELECT 'macd', COUNT(*), COUNT(macd), round(100.0 * COUNT(macd) / COUNT(*), 1)\nFROM technical_indicators WHERE pair = 'BTCUSDT' AND candle_seconds = 60\nUNION ALL\nSELECT 'obv', COUNT(*), COUNT(obv), round(100.0 * COUNT(obv) / COUNT(*), 1)\nFROM technical_indicators WHERE pair = 'BTCUSDT' AND candle_seconds = 60",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": [
+              {
+                "matcher": { "id": "byName", "options": "completeness_pct" },
+                "properties": [
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "gauge",
+                      "mode": "gradient"
+                    }
+                  },
+                  { "id": "min", "value": 0 },
+                  { "id": "max", "value": 100 },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        { "color": "red", "value": null },
+                        { "color": "yellow", "value": 80 },
+                        { "color": "green", "value": 95 }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm"
+          }
+        },
+        {
+          "id": 8,
+          "title": "Volume Over Time",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+          "datasource": { "type": "postgres", "uid": "risingwave" },
+          "targets": [
+            {
+              "datasource": { "type": "postgres", "uid": "risingwave" },
+              "editorMode": "code",
+              "format": "time_series",
+              "rawQuery": true,
+              "rawSql": "SELECT\n  to_timestamp(window_start_ms / 1000) as time,\n  volume as \"BTC Volume\"\nFROM technical_indicators\nWHERE pair = 'BTCUSDT'\n  AND candle_seconds = 60\n  AND window_start_ms >= extract(epoch from now() - interval '6 hours') * 1000\nORDER BY window_start_ms",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "fixed", "fixedColor": "purple" },
+              "custom": {
+                "fillOpacity": 30,
+                "lineWidth": 1
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": { "displayMode": "hidden" },
+            "tooltip": { "mode": "single" }
+          }
+        }
+      ],
+      "refresh": "30s",
+      "schemaVersion": 39,
+      "tags": ["ml", "operations", "monitoring"],
+      "templating": { "list": [] },
+      "time": { "from": "now-6h", "to": "now" },
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "ML Operations Dashboard",
+      "uid": "ml-operations-v1",
+      "version": 1
+    }
