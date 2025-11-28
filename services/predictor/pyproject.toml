@@ -1,0 +1,36 @@
+[project]
+name = "predictor"
+version = "0.1.0"
+description = "ML predictor service for crypto price prediction"
+requires-python = ">=3.12"
+dependencies = [
+    "loguru",
+    "mlflow>=2.22.0",
+    "optuna>=4.3.0",
+    "scikit-learn>=1.6.1",
+    "pandas",
+    "numpy",
+    "psycopg2-binary>=2.9.9",
+    "pydantic-settings",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov",
+]
+
+[project.scripts]
+train = "predictor.train:main"
+predict = "predictor.predict:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/predictor"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

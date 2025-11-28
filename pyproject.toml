@@ -25,12 +25,14 @@ members = [
     "services/trades",
     "services/candles",
     "services/technical-indicators",
+    "services/predictor",
 ]
 
 [tool.uv.sources]
 trades = { workspace = true }
 candles = { workspace = true }
 technical-indicators = { workspace = true }
+predictor = { workspace = true }
 
 [dependency-groups]
 dev = [
