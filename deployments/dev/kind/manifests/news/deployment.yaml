@@ -15,10 +15,15 @@ spec:
       labels:
         app: news
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
         - name: news
           image: news:latest
           imagePullPolicy: Never
+          securityContext:
+            allowPrivilegeEscalation: false
           envFrom:
             - configMapRef:
                 name: news-config

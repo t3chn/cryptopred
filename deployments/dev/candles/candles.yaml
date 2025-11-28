@@ -15,10 +15,15 @@ spec:
       labels:
         app: candles
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
         - name: candles
           image: candles:latest
           imagePullPolicy: Never
+          securityContext:
+            allowPrivilegeEscalation: false
           env:
             - name: KAFKA_BROKER_ADDRESS
               value: kafka-kafka-bootstrap.kafka.svc.cluster.local:9092

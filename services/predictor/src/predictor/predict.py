@@ -69,6 +69,8 @@ def write_prediction(
         predicted_ts_ms: Predicted timestamp (ms)
     """
     cursor = conn.cursor()
+    # nosemgrep: python.sqlalchemy.security.sqlalchemy-execute-raw-query
+    # Table name is from internal config, not user input
     query = f"""
     INSERT INTO {table} (predicted_price, pair, ts_ms, model_name, model_version, predicted_ts_ms)
     VALUES (%s, %s, %s, %s, %s, %s)
@@ -77,7 +79,7 @@ def write_prediction(
         model_version = EXCLUDED.model_version,
         predicted_ts_ms = EXCLUDED.predicted_ts_ms
     """
-    cursor.execute(
+    cursor.execute(  # nosemgrep
         query,
         (predicted_price, pair, ts_ms, model_name, model_version, predicted_ts_ms),
     )

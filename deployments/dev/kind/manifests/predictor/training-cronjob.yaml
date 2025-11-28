@@ -22,10 +22,15 @@ spec:
             component: ml
         spec:
           restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
           containers:
             - name: predictor
               image: predictor:latest
               imagePullPolicy: Never
+              securityContext:
+                allowPrivilegeEscalation: false
               command: ["train"]
               envFrom:
                 - configMapRef:

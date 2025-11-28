@@ -15,10 +15,15 @@ spec:
       labels:
         app: news-sentiment
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
         - name: news-sentiment
           image: news-sentiment:latest
           imagePullPolicy: Never
+          securityContext:
+            allowPrivilegeEscalation: false
           envFrom:
             - configMapRef:
                 name: news-sentiment-config

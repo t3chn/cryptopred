@@ -17,10 +17,15 @@ spec:
         app: trades-historical
         component: backfill
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
         - name: trades
           image: trades:latest
           imagePullPolicy: Never
+          securityContext:
+            allowPrivilegeEscalation: false
           env:
             - name: KAFKA_BROKER_ADDRESS
               valueFrom:

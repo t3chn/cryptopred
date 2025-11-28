@@ -15,10 +15,15 @@ spec:
       labels:
         app: technical-indicators
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
         - name: technical-indicators
           image: technical-indicators:latest
           imagePullPolicy: Never
+          securityContext:
+            allowPrivilegeEscalation: false
           env:
             - name: KAFKA_BROKER_ADDRESS
               value: kafka-kafka-bootstrap.kafka.svc.cluster.local:9092
