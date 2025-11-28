@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasource-risingwave
+  namespace: monitoring
+  labels:
+    grafana_datasource: "1"
+data:
+  risingwave.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: RisingWave
+        type: postgres
+        uid: risingwave
+        url: risingwave.risingwave.svc.cluster.local:4567
+        database: dev
+        user: root
+        secureJsonData:
+          password: ""
+        jsonData:
+          sslmode: disable
+          maxOpenConns: 10
+          maxIdleConns: 5
+          connMaxLifetime: 14400
+          postgresVersion: 1500
+          timescaledb: false
+        isDefault: true
+        editable: true

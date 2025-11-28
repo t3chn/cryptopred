@@ -1,0 +1,66 @@
+# Grafana Helm values for dev environment
+# Chart: grafana/grafana
+
+replicas: 1
+
+adminUser: admin
+adminPassword: grafana
+
+env:
+  GF_SERVER_ROOT_URL: http://localhost:3000
+  GF_LOG_LEVEL: info
+  GF_FEATURE_TOGGLES_ENABLE: publicDashboards
+  GF_EXPLORE_ENABLED: true
+  # Disable update checks
+  GF_ANALYTICS_CHECK_FOR_UPDATES: false
+  GF_ANALYTICS_REPORTING_ENABLED: false
+
+# Authentication
+grafana.ini:
+  auth:
+    disable_login_form: false
+  auth.basic:
+    enabled: true
+  auth.anonymous:
+    enabled: true
+    org_role: Viewer
+
+# Sidecar for auto-discovery of datasources and dashboards
+sidecar:
+  dashboards:
+    enabled: true
+    label: grafana_dashboard
+    labelValue: "1"
+    searchNamespace: ALL
+    folderAnnotation: grafana_folder
+    provider:
+      foldersFromFilesStructure: true
+  datasources:
+    enabled: true
+    label: grafana_datasource
+    labelValue: "1"
+    searchNamespace: ALL
+
+# Resource limits for dev
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Persistence
+persistence:
+  enabled: true
+  size: 1Gi
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 3000
+
+# Install plugins
+plugins:
+  - grafana-clock-panel
+  - grafana-piechart-panel
