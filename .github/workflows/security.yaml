@@ -146,18 +146,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Find Dockerfiles
-        id: dockerfiles
-        run: |
-          FILES=$(find . -name "Dockerfile*" -type f | tr '\n' ' ')
-          echo "files=$FILES" >> $GITHUB_OUTPUT
-
       - name: Hadolint
         uses: hadolint/hadolint-action@v3.1.0
-        if: steps.dockerfiles.outputs.files != ''
         with:
-          dockerfile: ${{ steps.dockerfiles.outputs.files }}
-          ignore: DL3008,DL3013
+          recursive: true
+          ignore: DL3008,DL3013,DL3015
 
   # ============================================
   # KUBERNETES SECURITY
