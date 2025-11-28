@@ -17,13 +17,21 @@ docker build \
 echo "Loading image into kind cluster..."
 kind load docker-image predictor:latest --name cryptopred
 
-echo "Creating predictions table in RisingWave..."
+echo "Ensuring cryptopred namespace exists..."
+kubectl create namespace cryptopred 2>/dev/null || true
+
+echo "Creating RisingWave schemas..."
 kubectl port-forward -n risingwave svc/risingwave 4567:4567 &
 PF_PID=$!
 sleep 3
 
+echo "Creating predictions table..."
 psql -h localhost -p 4567 -d dev -U root \
   -f "$SCRIPT_DIR/manifests/risingwave/schemas/005_predictions.sql" || true
+
+echo "Creating lunarcrush_metrics table..."
+psql -h localhost -p 4567 -d dev -U root \
+  -f "$SCRIPT_DIR/manifests/risingwave/schemas/006_lunarcrush.sql" || true
 
 kill $PF_PID 2>/dev/null || true
 

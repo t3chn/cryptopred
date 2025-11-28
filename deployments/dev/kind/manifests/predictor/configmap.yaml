@@ -15,6 +15,7 @@ data:
   RISINGWAVE_USER: "root"
   RISINGWAVE_PASSWORD: ""
   RISINGWAVE_DATABASE: "dev"
+  RISINGWAVE_TABLE: "technical_indicators"
   RISINGWAVE_INPUT_TABLE: "technical_indicators"
   RISINGWAVE_OUTPUT_TABLE: "predictions"
 
@@ -24,10 +25,13 @@ data:
   PREDICTION_HORIZON_SECONDS: "300"
 
   # Training settings
-  N_TRAINING_SAMPLES: "10000"
-  MODEL_TYPE: "HuberRegressor"
+  TRAINING_DATA_HORIZON_DAYS: "30"
+  MODEL_NAME: "LightGBM"
   HYPERPARAM_SEARCH_TRIALS: "10"
-  HYPERPARAM_SPLITS: "5"
+
+  # Feature flags
+  USE_TIME_FEATURES: "true"
+  USE_LUNARCRUSH_FEATURES: "false"
 
   # Prediction settings
   MODEL_VERSION: "latest"
