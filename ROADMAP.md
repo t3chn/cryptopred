@@ -161,7 +161,6 @@ Build a production-grade ML platform for cryptocurrency price prediction that co
 ### 6.1 Prediction API
 - [ ] REST API for batch predictions
 - [ ] WebSocket for real-time predictions
-- [ ] GraphQL endpoint
 - [ ] Rate limiting and authentication
 
 ### 6.2 Alerting
@@ -169,11 +168,6 @@ Build a production-grade ML platform for cryptocurrency price prediction that co
 - [ ] Discord webhook integration
 - [ ] Email alerts
 - [ ] Custom webhook support
-
-### 6.3 External Platforms
-- [ ] TradingView webhook receiver
-- [ ] Pine Script indicator export
-- [ ] Zapier/IFTTT integration
 
 ---
 
