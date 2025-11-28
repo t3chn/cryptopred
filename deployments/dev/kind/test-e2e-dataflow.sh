@@ -35,10 +35,11 @@ echo ""
 
 # 1. Check cluster is running
 echo "1. Checking Kind cluster..."
-if kind get clusters 2>/dev/null | grep -q cryptopred; then
-    pass "Kind cluster 'cryptopred' is running"
+CLUSTER_NAME=$(kind get clusters 2>/dev/null | grep -E "^(cryptopred|crypto-predictor)$" | head -1)
+if [ -n "$CLUSTER_NAME" ]; then
+    pass "Kind cluster '$CLUSTER_NAME' is running"
 else
-    fail "Kind cluster 'cryptopred' not found"
+    fail "Kind cluster not found"
     echo "Run: ./create_cluster.sh"
     exit 1
 fi

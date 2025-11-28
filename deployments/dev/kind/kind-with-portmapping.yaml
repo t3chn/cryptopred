@@ -1,19 +1,22 @@
+# CryptoPred Kind Cluster Configuration
 #
-# kind delete cluster --name crypto-predictor
+# Quick start:
+#   ./create_cluster.sh
 #
-# docker network rm crypto-predictor-network
-# docker network create --subnet 172.100.0.0/16 crypto-predictor-network
-# KIND_EXPERIMENTAL_DOCKER_NETWORK=crypto-predictor-network kind create cluster --config ./kind/kind-with-portmapping.yaml
+# Manual commands:
+#   kind delete cluster --name cryptopred
+#   docker network rm cryptopred-network
+#   docker network create --subnet 172.100.0.0/16 cryptopred-network
+#   KIND_EXPERIMENTAL_DOCKER_NETWORK=cryptopred-network kind create cluster --config ./kind-with-portmapping.yaml
 #
 # Show status:
-#
-# kubectl get nodes --show-labels
-# kubectl cluster-info --context kind-crypto-predictor
+#   kubectl get nodes --show-labels
+#   kubectl cluster-info --context kind-cryptopred
 #
 ---
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
-name: crypto-predictor
+name: cryptopred
 networking:
   podSubnet: "10.100.0.0/16"
 nodes:

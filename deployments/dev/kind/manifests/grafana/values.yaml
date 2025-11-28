@@ -50,10 +50,19 @@ resources:
     cpu: 100m
     memory: 128Mi
 
-# Persistence
+# Disable init-chown-data (causes issues in Kind)
+initChownData:
+  enabled: false
+
+# Security context
+securityContext:
+  runAsUser: 472
+  runAsGroup: 472
+  fsGroup: 472
+
+# Persistence - disabled for dev (avoids chown issues)
 persistence:
-  enabled: true
-  size: 1Gi
+  enabled: false
 
 # Service configuration
 service:
