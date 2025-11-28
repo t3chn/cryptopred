@@ -87,8 +87,8 @@ data:
         {
           "id": 3,
           "title": "BTC RSI (14)",
-          "type": "timeseries",
-          "gridPos": { "h": 6, "w": 12, "x": 0, "y": 10 },
+          "type": "stat",
+          "gridPos": { "h": 6, "w": 6, "x": 0, "y": 10 },
           "datasource": { "type": "postgres", "uid": "risingwave" },
           "targets": [
             {
@@ -96,45 +96,45 @@ data:
               "editorMode": "code",
               "format": "table",
               "rawQuery": true,
-              "rawSql": "SELECT\n  to_timestamp(window_start_ms / 1000) as time,\n  rsi_14 as \"RSI\"\nFROM technical_indicators\nWHERE pair = 'BTCUSDT'\n  AND candle_seconds = 60\n  AND rsi_14 IS NOT NULL\n  AND window_start_ms >= extract(epoch from now() - interval '3 hours') * 1000\nORDER BY window_start_ms",
+              "rawSql": "SELECT rsi_14 as \"RSI\" FROM technical_indicators WHERE pair = 'BTCUSDT' ORDER BY window_start_ms DESC LIMIT 1",
               "refId": "A"
             }
           ],
           "fieldConfig": {
             "defaults": {
-              "color": { "mode": "palette-classic" },
-              "custom": {
-                "drawStyle": "line",
-                "lineWidth": 2,
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "spanNulls": false,
-                "showPoints": "never",
-                "thresholdsStyle": { "mode": "line" }
-              },
+              "color": { "mode": "thresholds" },
               "min": 0,
               "max": 100,
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
-                  { "color": "green", "value": null },
-                  { "color": "red", "value": 70 },
-                  { "color": "blue", "value": 30 }
+                  { "color": "blue", "value": null },
+                  { "color": "green", "value": 30 },
+                  { "color": "red", "value": 70 }
                 ]
-              }
+              },
+              "unit": "none",
+              "decimals": 1
             },
             "overrides": []
           },
           "options": {
-            "legend": { "displayMode": "hidden" },
-            "tooltip": { "mode": "single" }
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "textMode": "value_and_name",
+            "reduceOptions": {
+              "calcs": ["lastNotNull"],
+              "fields": "",
+              "values": false
+            }
           }
         },
         {
           "id": 4,
           "title": "ETH RSI (14)",
-          "type": "timeseries",
-          "gridPos": { "h": 6, "w": 12, "x": 12, "y": 10 },
+          "type": "stat",
+          "gridPos": { "h": 6, "w": 6, "x": 6, "y": 10 },
           "datasource": { "type": "postgres", "uid": "risingwave" },
           "targets": [
             {
@@ -142,38 +142,38 @@ data:
               "editorMode": "code",
               "format": "table",
               "rawQuery": true,
-              "rawSql": "SELECT\n  to_timestamp(window_start_ms / 1000) as time,\n  rsi_14 as \"RSI\"\nFROM technical_indicators\nWHERE pair = 'ETHUSDT'\n  AND candle_seconds = 60\n  AND rsi_14 IS NOT NULL\n  AND window_start_ms >= extract(epoch from now() - interval '3 hours') * 1000\nORDER BY window_start_ms",
+              "rawSql": "SELECT rsi_14 as \"RSI\" FROM technical_indicators WHERE pair = 'ETHUSDT' ORDER BY window_start_ms DESC LIMIT 1",
               "refId": "A"
             }
           ],
           "fieldConfig": {
             "defaults": {
-              "color": { "mode": "palette-classic" },
-              "custom": {
-                "drawStyle": "line",
-                "lineWidth": 2,
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "spanNulls": false,
-                "showPoints": "never",
-                "thresholdsStyle": { "mode": "line" }
-              },
+              "color": { "mode": "thresholds" },
               "min": 0,
               "max": 100,
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
-                  { "color": "green", "value": null },
-                  { "color": "red", "value": 70 },
-                  { "color": "blue", "value": 30 }
+                  { "color": "blue", "value": null },
+                  { "color": "green", "value": 30 },
+                  { "color": "red", "value": 70 }
                 ]
-              }
+              },
+              "unit": "none",
+              "decimals": 1
             },
             "overrides": []
           },
           "options": {
-            "legend": { "displayMode": "hidden" },
-            "tooltip": { "mode": "single" }
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "textMode": "value_and_name",
+            "reduceOptions": {
+              "calcs": ["lastNotNull"],
+              "fields": "",
+              "values": false
+            }
           }
         },
         {
