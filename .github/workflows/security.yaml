@@ -184,10 +184,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install mypy pydantic pydantic-settings types-requests
+          pip install mypy pydantic pydantic-settings types-requests types-PyYAML
 
       - name: Run mypy
-        run: mypy services/ --ignore-missing-imports --no-error-summary
+        run: mypy services/ --config-file=pyproject.toml --no-error-summary
 
   # ============================================
   # CODE QUALITY
