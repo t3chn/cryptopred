@@ -1,0 +1,108 @@
+# RisingWave Helm values for dev environment
+# Chart: risingwavelabs/risingwave
+
+# Enable bundled dependencies (PostgreSQL for meta, MinIO for state)
+tags:
+  bundle: true
+  postgresql: true
+  minio: true
+
+# Standalone mode for dev (single node)
+standalone:
+  enabled: false
+
+# Meta store - PostgreSQL
+metaStore:
+  postgresql:
+    enabled: true
+    host: risingwave-postgresql
+    port: 5432
+    database: risingwave
+    authentication:
+      username: postgres
+      password: risingwave123
+
+# State store - MinIO
+stateStore:
+  minio:
+    enabled: true
+    endpoint: risingwave-minio:9000
+    bucket: risingwave
+    authentication:
+      username: admin
+      password: minio12345
+
+# Component resources (optimized for dev/kind)
+metaComponent:
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+frontendComponent:
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+computeComponent:
+  resources:
+    limits:
+      cpu: 1
+      memory: 2Gi
+    requests:
+      cpu: 200m
+      memory: 512Mi
+
+compactorComponent:
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+# Bundled PostgreSQL for metadata
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: risingwave123
+    database: risingwave
+  primary:
+    resourcesPreset: none
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+    persistence:
+      enabled: true
+      size: 2Gi
+
+# Bundled MinIO for state storage
+minio:
+  enabled: true
+  mode: standalone
+  defaultBuckets: risingwave
+  auth:
+    rootUser: admin
+    rootPassword: minio12345
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  persistence:
+    enabled: true
+    size: 5Gi

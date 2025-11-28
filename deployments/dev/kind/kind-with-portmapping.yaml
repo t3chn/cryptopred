@@ -54,3 +54,9 @@ nodes:
       - containerPort: 31236
         hostPort: 31236
         listenAddress: "127.0.0.1"
+
+      # Expose Kafka UI to localhost:30080
+      - containerPort: 30080
+        hostPort: 30080
+        listenAddress: "127.0.0.1"
+        protocol: TCP

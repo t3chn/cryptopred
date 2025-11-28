@@ -1,0 +1,41 @@
+# Technical Indicators Configuration
+# Enable/disable indicators and configure their parameters
+
+indicators:
+  sma:
+    enabled: true
+    periods: [7, 14, 21, 50]
+
+  ema:
+    enabled: true
+    periods: [7, 14, 21, 50]
+
+  rsi:
+    enabled: true
+    periods: [7, 14, 21]
+
+  macd:
+    enabled: true
+    fast: 12
+    slow: 26
+    signal: 9
+
+  bbands:
+    enabled: true
+    period: 20
+    std: 2.0
+
+  stoch:
+    enabled: true
+    k: 14
+    d: 3
+
+  atr:
+    enabled: true
+    period: 14
+
+  obv:
+    enabled: true
+
+# Rolling window size (must be >= max indicator period)
+max_candles: 100
