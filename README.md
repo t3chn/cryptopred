@@ -141,12 +141,15 @@ Additional pairs can be configured via environment variables.
 
 ## Roadmap
 
-- [ ] Multi-exchange support (Coinbase, Kraken)
-- [ ] News sentiment integration
-- [ ] Ensemble model improvements
-- [ ] Backtesting framework
-- [ ] REST API for predictions
-- [ ] Web dashboard
+See [ROADMAP.md](ROADMAP.md) for the detailed development plan including:
+
+- On-chain analytics & derivatives data
+- Deep learning models (LSTM, Transformer, TFT)
+- Uncertainty quantification & conformal prediction
+- Backtesting framework with strategy simulation
+- Trading signal generation & risk management
+- REST/WebSocket API for predictions
+- Web dashboard & alerting integrations
 
 ---
 
