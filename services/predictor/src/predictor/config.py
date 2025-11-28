@@ -30,7 +30,7 @@ class TrainingConfig(BaseSettings):
     candle_seconds: int = 60
     prediction_horizon_seconds: int = 300  # 5 minutes
 
-    # Features for model
+    # Features for model (base technical indicators from RisingWave)
     features: list[str] = [
         "open",
         "high",
@@ -54,6 +54,11 @@ class TrainingConfig(BaseSettings):
         "macd_hist",
         "obv",
     ]
+
+    # Feature flags
+    use_time_features: bool = True  # hour, day_of_week, cyclical encodings
+    use_lunarcrush_features: bool = False  # sentiment, galaxy_score (requires API key)
+    lunarcrush_api_key: str | None = None  # Set to enable LunarCrush features
 
     # Hyperparameter tuning
     hyperparam_search_trials: int = 10

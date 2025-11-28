@@ -12,6 +12,7 @@ dependencies = [
     "numpy",
     "psycopg2-binary>=2.9.9",
     "pydantic-settings",
+    "lightgbm>=4.0.0",
 ]
 
 [project.optional-dependencies]

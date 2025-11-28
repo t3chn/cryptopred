@@ -1,0 +1,38 @@
+[project]
+name = "lunarcrush"
+version = "0.1.0"
+description = "LunarCrush API client for sentiment and social metrics"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.27.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "quixstreams>=3.0.0",
+    "loguru>=0.7.0",
+]
+
+[project.scripts]
+lunarcrush = "lunarcrush.main:main"
+lunarcrush-backfill = "lunarcrush.main:backfill_main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=6.0",
+    "pytest-mock>=3.14",
+    "respx>=0.21",
+]
+
+[build-system]
+requires = ["uv_build>=0.9.8,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+markers = [
+    "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
+]

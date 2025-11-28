@@ -28,6 +28,7 @@ members = [
     "services/predictor",
     "services/news",
     "services/news-sentiment",
+    "services/lunarcrush",
 ]
 
 [tool.uv.sources]
@@ -37,13 +38,16 @@ technical-indicators = { workspace = true }
 predictor = { workspace = true }
 news = { workspace = true }
 news-sentiment = { workspace = true }
+lunarcrush = { workspace = true }
 
 [dependency-groups]
 dev = [
     "pre-commit>=4.5.0",
     "pytest>=9.0.1",
+    "pytest-asyncio>=0.24",
     "pytest-cov>=7.0.0",
     "pytest-mock>=3.15.1",
+    "respx>=0.21",
     "bandit>=1.7.0",
     "mypy>=1.13.0",
     "pip-audit>=2.7.0",
