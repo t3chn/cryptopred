@@ -1,0 +1,58 @@
+# MLflow Tracking Server - Bitnami Helm Chart
+# https://artifacthub.io/packages/helm/bitnami/mlflow
+
+tracking:
+  service:
+    type: ClusterIP
+  auth:
+    enabled: true
+    username: admin
+    password: mlflow123
+
+# Disable MLflow run service (we only need tracking)
+run:
+  enabled: false
+
+# Disable built-in MinIO - use existing from RisingWave
+minio:
+  enabled: false
+
+# External S3 (MinIO from RisingWave)
+externalS3:
+  host: "risingwave-minio.risingwave.svc.cluster.local"
+  port: 9000
+  useCredentialsInSecret: true
+  existingSecret: "mlflow-minio-secret"
+  existingSecretAccessKeyIDKey: "accesskey"
+  existingSecretKeySecretKey: "secretkey"
+  protocol: "http"
+  bucket: "mlflow"
+  serveArtifacts: true
+
+# Built-in PostgreSQL for metadata
+postgresql:
+  enabled: true
+  auth:
+    username: mlflow
+    password: mlflow
+    database: mlflow
+  primary:
+    persistence:
+      enabled: true
+      size: 1Gi
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+
+# Resource limits for dev
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
