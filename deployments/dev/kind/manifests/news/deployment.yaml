@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: news
+  namespace: default
+  labels:
+    app: news
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: news
+  template:
+    metadata:
+      labels:
+        app: news
+    spec:
+      containers:
+        - name: news
+          image: news:latest
+          imagePullPolicy: Never
+          envFrom:
+            - configMapRef:
+                name: news-config
+            - secretRef:
+                name: news-secrets
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: news-config
+  namespace: default
+data:
+  KAFKA_BROKER_ADDRESS: "kafka-kafka-bootstrap.kafka.svc.cluster.local:9092"
+  KAFKA_OUTPUT_TOPIC: "news"
+  POLLING_INTERVAL_SEC: "60"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: news-secrets
+  namespace: default
+type: Opaque
+stringData:
+  CRYPTOPANIC_API_KEY: "YOUR_CRYPTOPANIC_API_KEY_HERE"

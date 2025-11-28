@@ -26,6 +26,8 @@ members = [
     "services/candles",
     "services/technical-indicators",
     "services/predictor",
+    "services/news",
+    "services/news-sentiment",
 ]
 
 [tool.uv.sources]
@@ -33,6 +35,8 @@ trades = { workspace = true }
 candles = { workspace = true }
 technical-indicators = { workspace = true }
 predictor = { workspace = true }
+news = { workspace = true }
+news-sentiment = { workspace = true }
 
 [dependency-groups]
 dev = [
