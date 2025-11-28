@@ -295,13 +295,146 @@ class LightGBMWithHyperparameterTuning:
         return study.best_trial.params
 
 
+class EnsembleModel:
+    """Ensemble model combining multiple base models.
+
+    Combines HuberRegressor and LightGBM predictions using weighted averaging.
+    Ensemble methods typically improve prediction accuracy by:
+    - Reducing variance (averaging smooths predictions)
+    - Capturing different patterns (each model has different inductive biases)
+    - Improving robustness (single model failures are diluted)
+    """
+
+    def __init__(
+        self,
+        weights: list[float] | None = None,
+        use_huber: bool = True,
+        use_lightgbm: bool = True,
+    ):
+        """Initialize ensemble model.
+
+        Args:
+            weights: Optional list of weights for [huber, lightgbm].
+                If None, uses equal weights.
+            use_huber: Include HuberRegressor in ensemble
+            use_lightgbm: Include LightGBM in ensemble
+        """
+        self.models: list[
+            HuberRegressorWithHyperparameterTuning | LightGBMWithHyperparameterTuning
+        ] = []
+        self.model_names: list[str] = []
+
+        if use_huber:
+            self.models.append(HuberRegressorWithHyperparameterTuning())
+            self.model_names.append("HuberRegressor")
+        if use_lightgbm:
+            self.models.append(LightGBMWithHyperparameterTuning())
+            self.model_names.append("LightGBM")
+
+        if len(self.models) == 0:
+            raise ValueError("At least one model must be enabled")
+
+        if weights is None:
+            self.weights = [1.0 / len(self.models)] * len(self.models)
+        else:
+            if len(weights) != len(self.models):
+                raise ValueError(f"Expected {len(self.models)} weights, got {len(weights)}")
+            total = sum(weights)
+            self.weights = [w / total for w in weights]  # Normalize to sum to 1
+
+        self.hyperparam_search_trials: int = 0
+        self.hyperparam_splits: int = 3
+
+    def fit(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        hyperparam_search_trials: int = 0,
+        hyperparam_splits: int = 3,
+    ) -> "EnsembleModel":
+        """Fit all models in ensemble.
+
+        Args:
+            X: Training features
+            y: Training target
+            hyperparam_search_trials: Number of Optuna trials per model (0 = no tuning)
+            hyperparam_splits: Number of TimeSeriesSplit folds
+
+        Returns:
+            Self
+        """
+        self.hyperparam_search_trials = hyperparam_search_trials
+        self.hyperparam_splits = hyperparam_splits
+
+        logger.info(f"Fitting ensemble with {len(self.models)} models: {self.model_names}")
+
+        for i, model in enumerate(self.models):
+            logger.info(f"Fitting model {i + 1}/{len(self.models)}: {self.model_names[i]}")
+            model.fit(X, y, hyperparam_search_trials, hyperparam_splits)
+
+        logger.info(f"Ensemble weights: {dict(zip(self.model_names, self.weights, strict=True))}")
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        """Generate weighted ensemble predictions.
+
+        Args:
+            X: Features
+
+        Returns:
+            Weighted average predictions
+        """
+        predictions = []
+        for model in self.models:
+            pred = model.predict(X)
+            predictions.append(pred)
+
+        # Weighted average
+        ensemble_pred = np.zeros(len(X))
+        for pred, weight in zip(predictions, self.weights, strict=True):
+            ensemble_pred += weight * np.array(pred)
+
+        return ensemble_pred
+
+    def predict_with_uncertainty(self, X: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
+        """Generate predictions with uncertainty estimates.
+
+        Uses disagreement between models as uncertainty measure.
+
+        Args:
+            X: Features
+
+        Returns:
+            Tuple of (predictions, standard_deviations)
+        """
+        predictions = []
+        for model in self.models:
+            pred = model.predict(X)
+            predictions.append(np.array(pred))
+
+        predictions_array = np.array(predictions)  # Shape: (n_models, n_samples)
+
+        # Weighted mean
+        mean_pred = np.average(predictions_array, axis=0, weights=self.weights)
+
+        # Standard deviation across models (uncertainty)
+        std_pred = np.std(predictions_array, axis=0)
+
+        return mean_pred, std_pred
+
+
+ModelType = (
+    HuberRegressorWithHyperparameterTuning | LightGBMWithHyperparameterTuning | EnsembleModel
+)
+
+
 def get_model_obj(
     model_name: str,
-) -> HuberRegressorWithHyperparameterTuning | LightGBMWithHyperparameterTuning:
+) -> ModelType:
     """Factory function to get model by name.
 
     Args:
-        model_name: Name of model class. Supported: HuberRegressor, LightGBM
+        model_name: Name of model class. Supported: HuberRegressor, LightGBM, Ensemble
 
     Returns:
         Model instance
@@ -313,4 +446,6 @@ def get_model_obj(
         return HuberRegressorWithHyperparameterTuning()
     if model_name == "LightGBM":
         return LightGBMWithHyperparameterTuning()
-    raise ValueError(f"Model {model_name} not found. Available: HuberRegressor, LightGBM")
+    if model_name == "Ensemble":
+        return EnsembleModel()
+    raise ValueError(f"Model {model_name} not found. Available: HuberRegressor, LightGBM, Ensemble")
