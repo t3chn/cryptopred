@@ -44,4 +44,119 @@ dev = [
     "pytest>=9.0.1",
     "pytest-cov>=7.0.0",
     "pytest-mock>=3.15.1",
+    "bandit>=1.7.0",
+    "mypy>=1.13.0",
+    "pip-audit>=2.7.0",
+    "vulture>=2.13",
+    "interrogate>=1.7.0",
+]
+
+# ============================================
+# BANDIT - Python SAST
+# ============================================
+[tool.bandit]
+exclude_dirs = ["tests", ".venv", "target"]
+skips = ["B101", "B601", "B608", "B110"]  # B101: assert, B601: shell (FP), B608: SQL (internal), B110: except pass (conn cleanup)
+
+# ============================================
+# MYPY - Type Checking
+# ============================================
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = false
+warn_unused_configs = true
+ignore_missing_imports = true
+exclude = ["tests", ".venv", "target"]
+disable_error_code = ["no-any-return", "call-arg"]
+
+# ============================================
+# COVERAGE - Test Coverage
+# ============================================
+[tool.coverage.run]
+branch = true
+source = ["services"]
+omit = ["*/tests/*", "*/__init__.py"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]
+
+# ============================================
+# VULTURE - Dead Code Detection
+# ============================================
+[tool.vulture]
+min_confidence = 80
+paths = ["services"]
+exclude = ["tests", ".venv"]
+
+# ============================================
+# INTERROGATE - Docstring Coverage
+# ============================================
+[tool.interrogate]
+ignore-init-method = true
+ignore-init-module = true
+ignore-magic = true
+ignore-semiprivate = true
+ignore-private = true
+ignore-property-decorators = true
+fail-under = 50
+verbose = 2
+exclude = ["tests", ".venv"]
+
+# ============================================
+# RUFF - Linting & Formatting
+# ============================================
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = [".venv", "target", "__pycache__"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "UP",   # pyupgrade
+    "S",    # flake8-bandit (security)
+    "T20",  # flake8-print
+]
+ignore = [
+    "S101",  # assert usage OK
+    "S104",  # hardcoded bind all interfaces OK in containers
+    "S105",  # hardcoded passwords OK for dev defaults
+    "S608",  # SQL injection - internal queries only
+    "S110",  # try-except-pass OK for cleanup
+    "E501",  # line too long - handled by formatter
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = [
+    "S105",  # hardcoded passwords in tests
+    "S106",  # hardcoded passwords in tests
+    "B007",  # unused loop variable
+    "B017",  # blind exception
+]
+
+# ============================================
+# PYTEST
+# ============================================
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--cov=services",
+    "--cov-report=term-missing",
+    "--cov-fail-under=80",
 ]

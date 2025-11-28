@@ -37,9 +37,7 @@ def validate_data(
     data = data.dropna()
     final_rows = len(data)
 
-    logger.info(
-        f"Rows after cleaning: {final_rows} (dropped {initial_rows - final_rows})"
-    )
+    logger.info(f"Rows after cleaning: {final_rows} (dropped {initial_rows - final_rows})")
 
     if final_rows == 0:
         raise ValueError("No valid rows remaining after cleaning")

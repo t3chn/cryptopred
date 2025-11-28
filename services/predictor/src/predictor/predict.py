@@ -2,7 +2,7 @@
 
 import os
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pandas as pd
 import psycopg2
@@ -168,10 +168,9 @@ def predict(
                     prediction = model.predict(X)[0]
 
                     # Calculate timestamps
-                    ts_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+                    ts_ms = int(datetime.now(UTC).timestamp() * 1000)
                     predicted_ts_ms = (
-                        window_start_ms
-                        + (candle_seconds + prediction_horizon_seconds) * 1000
+                        window_start_ms + (candle_seconds + prediction_horizon_seconds) * 1000
                     )
 
                     # Write prediction

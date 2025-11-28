@@ -66,9 +66,7 @@ class TestSignalHandler:
 class TestRunLive:
     """Test run_live async function."""
 
-    async def test_run_live_starts_client(
-        self, mock_kafka_app, mock_settings, sample_trades
-    ):
+    async def test_run_live_starts_client(self, mock_kafka_app, mock_settings, sample_trades):
         """Test run_live starts the WebSocket client."""
         mock_client = AsyncMock()
         mock_client.start = AsyncMock()
@@ -88,9 +86,7 @@ class TestRunLive:
 
         mock_client.start.assert_called_once()
 
-    async def test_run_live_stops_client(
-        self, mock_kafka_app, mock_settings, sample_trades
-    ):
+    async def test_run_live_stops_client(self, mock_kafka_app, mock_settings, sample_trades):
         """Test run_live stops the client on completion."""
         mock_client = AsyncMock()
         mock_client.start = AsyncMock()
@@ -136,9 +132,7 @@ class TestRunLive:
         # Should produce each trade
         assert mock_kafka_producer.produce.call_count == len(sample_trades)
 
-    async def test_run_live_serializes_trades(
-        self, mock_kafka_app, mock_kafka_topic, sample_trade
-    ):
+    async def test_run_live_serializes_trades(self, mock_kafka_app, mock_kafka_topic, sample_trade):
         """Test run_live serializes trades correctly."""
         mock_client = AsyncMock()
         mock_client.start = AsyncMock()
@@ -228,13 +222,9 @@ class TestRunLive:
                     client=mock_client,
                 )
 
-        mock_kafka_app.topic.assert_called_with(
-            name="my-topic", value_serializer="json"
-        )
+        mock_kafka_app.topic.assert_called_with(name="my-topic", value_serializer="json")
 
-    async def test_run_live_empty_trades_batch(
-        self, mock_kafka_app, mock_kafka_producer
-    ):
+    async def test_run_live_empty_trades_batch(self, mock_kafka_app, mock_kafka_producer):
         """Test run_live handles empty trades batch."""
         mock_client = AsyncMock()
         mock_client.start = AsyncMock()
@@ -261,9 +251,7 @@ class TestRunLive:
 class TestRunHistorical:
     """Test run_historical sync function."""
 
-    def test_run_historical_gets_trades(
-        self, mock_kafka_app, mock_kafka_producer, sample_trades
-    ):
+    def test_run_historical_gets_trades(self, mock_kafka_app, mock_kafka_producer, sample_trades):
         """Test run_historical fetches trades from client."""
         mock_client = MagicMock()
         mock_client.is_done = MagicMock(side_effect=[False, True])
@@ -306,9 +294,7 @@ class TestRunHistorical:
 
         assert mock_kafka_producer.produce.call_count == len(sample_trades)
 
-    def test_run_historical_serializes_trades(
-        self, mock_kafka_app, mock_kafka_topic, sample_trade
-    ):
+    def test_run_historical_serializes_trades(self, mock_kafka_app, mock_kafka_topic, sample_trade):
         """Test run_historical serializes trades correctly."""
         mock_client = MagicMock()
         mock_client.is_done = MagicMock(side_effect=[False, True])
@@ -393,13 +379,9 @@ class TestRunHistorical:
                     client=mock_client,
                 )
 
-        mock_kafka_app.topic.assert_called_with(
-            name="historical-trades", value_serializer="json"
-        )
+        mock_kafka_app.topic.assert_called_with(name="historical-trades", value_serializer="json")
 
-    def test_run_historical_empty_trades_batch(
-        self, mock_kafka_app, mock_kafka_producer
-    ):
+    def test_run_historical_empty_trades_batch(self, mock_kafka_app, mock_kafka_producer):
         """Test run_historical handles empty trades batch."""
         mock_client = MagicMock()
         mock_client.is_done = MagicMock(side_effect=[False, True])
@@ -479,9 +461,7 @@ class TestMain:
 
             mock_asyncio_run.assert_called_once()
 
-    def test_main_calls_run_historical_for_historical_mode(
-        self, mock_settings, env_vars
-    ):
+    def test_main_calls_run_historical_for_historical_mode(self, mock_settings, env_vars):
         """Test main calls run_historical for historical mode."""
         mock_settings.live_or_historical = "historical"
         with env_vars(kafka_broker_address="localhost:9092", kafka_topic_name="trades"):
@@ -514,9 +494,7 @@ class TestMainModuleReset:
 class TestTradeProduction:
     """Test trade production to Kafka."""
 
-    async def test_trade_key_is_product_id(
-        self, mock_kafka_app, mock_kafka_topic, sample_trade
-    ):
+    async def test_trade_key_is_product_id(self, mock_kafka_app, mock_kafka_topic, sample_trade):
         """Test trade key is the product_id."""
         mock_client = AsyncMock()
         mock_client.start = AsyncMock()

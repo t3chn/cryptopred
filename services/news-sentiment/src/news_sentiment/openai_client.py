@@ -33,9 +33,7 @@ class OpenAISentimentClient:
         self.client = OpenAI(api_key=api_key)
         self.model = model
 
-    def extract_sentiment(
-        self, title: str, description: str | None = None
-    ) -> SentimentResult:
+    def extract_sentiment(self, title: str, description: str | None = None) -> SentimentResult:
         """
         Extract sentiment scores from news text.
 

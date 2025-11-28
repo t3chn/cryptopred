@@ -394,10 +394,7 @@ class TestSettingsEdgeCases:
                 kafka_broker_address="broker1:9092,broker2:9092,broker3:9092",
                 kafka_topic_name="trades",
             )
-            assert (
-                settings.kafka_broker_address
-                == "broker1:9092,broker2:9092,broker3:9092"
-            )
+            assert settings.kafka_broker_address == "broker1:9092,broker2:9092,broker3:9092"
 
     def test_api_key_with_special_characters(self, env_vars):
         """Test API key with special characters."""

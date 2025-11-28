@@ -1,7 +1,5 @@
 """Configuration for predictor service."""
 
-from typing import Optional
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -59,7 +57,7 @@ class TrainingConfig(BaseSettings):
 
     # Hyperparameter tuning
     hyperparam_search_trials: int = 10
-    model_name: Optional[str] = "HuberRegressor"
+    model_name: str | None = "HuberRegressor"
     n_model_candidates: int = 1
 
     # Training settings

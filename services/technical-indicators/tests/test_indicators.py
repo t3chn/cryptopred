@@ -1,7 +1,6 @@
 """Tests for technical indicators calculations."""
 
 import pytest
-
 from technical_indicators.indicators import compute_indicators
 
 
@@ -71,9 +70,7 @@ class TestComputeIndicators:
         assert "bb_lower" in result
 
         # Upper should be >= middle >= lower
-        if all(
-            result.get(k) is not None for k in ["bb_upper", "bb_middle", "bb_lower"]
-        ):
+        if all(result.get(k) is not None for k in ["bb_upper", "bb_middle", "bb_lower"]):
             assert result["bb_upper"] >= result["bb_middle"]
             assert result["bb_middle"] >= result["bb_lower"]
 
@@ -152,9 +149,7 @@ class TestComputeIndicators:
 
         for key, value in result.items():
             if value is not None:
-                assert isinstance(value, (int, float)), (
-                    f"{key} is not numeric: {type(value)}"
-                )
+                assert isinstance(value, (int, float)), f"{key} is not numeric: {type(value)}"
 
 
 class TestIndicatorAccuracy:

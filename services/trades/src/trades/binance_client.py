@@ -10,19 +10,18 @@ import asyncio
 import time
 from typing import TYPE_CHECKING
 
-from loguru import logger
-
-from binance_sdk_derivatives_trading_usds_futures import (
-    DerivativesTradingUsdsFutures,
-    DERIVATIVES_TRADING_USDS_FUTURES_REST_API_PROD_URL,
-    DERIVATIVES_TRADING_USDS_FUTURES_WS_STREAMS_PROD_URL,
-    TooManyRequestsError,
-    RateLimitBanError,
-)
 from binance_common.configuration import (
     ConfigurationRestAPI,
     ConfigurationWebSocketStreams,
 )
+from binance_sdk_derivatives_trading_usds_futures import (
+    DERIVATIVES_TRADING_USDS_FUTURES_REST_API_PROD_URL,
+    DERIVATIVES_TRADING_USDS_FUTURES_WS_STREAMS_PROD_URL,
+    DerivativesTradingUsdsFutures,
+    RateLimitBanError,
+    TooManyRequestsError,
+)
+from loguru import logger
 
 from trades.trade import Trade
 
@@ -52,7 +51,7 @@ class BinanceHistoricalClient:
         base_start = int((time.time() - self.last_n_days * 24 * 60 * 60) * 1000)
 
         # State for each symbol: {symbol: start_time_ms}
-        self._symbol_state = {pid: base_start for pid in self.product_ids}
+        self._symbol_state = dict.fromkeys(self.product_ids, base_start)
         self._current_idx = 0
         self._consecutive_failures = 0
 
@@ -180,9 +179,7 @@ class BinanceLiveClient:
 
     async def start(self):
         """Start WebSocket connection and subscribe to aggregate trade streams."""
-        logger.info(
-            f"Connecting to Binance Futures WebSocket for {len(self.product_ids)} symbols"
-        )
+        logger.info(f"Connecting to Binance Futures WebSocket for {len(self.product_ids)} symbols")
 
         self._connection = await self.client.websocket_streams.create_connection()
         self._is_running = True
@@ -227,7 +224,7 @@ class BinanceLiveClient:
             try:
                 trade = await asyncio.wait_for(self._trade_queue.get(), timeout=1.0)
                 trades.append(trade)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 pass
 
         return trades

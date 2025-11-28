@@ -1,0 +1,24 @@
+---
+checks:
+  # Enable all default checks
+  addAllBuiltIn: true
+
+  # Exclude checks that don't apply to development environment
+  exclude:
+    - "unset-cpu-requirements"      # Dev environment doesn't need strict CPU limits
+    - "unset-memory-requirements"   # Dev environment doesn't need strict memory limits
+    - "no-read-only-root-fs"        # Some apps need writable root fs
+    - "run-as-non-root"             # Some base images run as root
+    - "no-liveness-probe"           # Not all services need liveness probes in dev
+    - "no-readiness-probe"          # Not all services need readiness probes in dev
+
+customChecks:
+  # Ensure no hardcoded secrets in env vars
+  - name: "no-hardcoded-secrets"
+    template: "env-var-secret"
+    params:
+      keys:
+        - ".*PASSWORD.*"
+        - ".*SECRET.*"
+        - ".*API_KEY.*"
+        - ".*TOKEN.*"

@@ -14,7 +14,6 @@ from technical_indicators.config import config, load_indicators_config
 from technical_indicators.indicators import compute_indicators
 from technical_indicators.state import update_candles_state
 
-
 # Global shutdown flag
 _shutdown_requested = False
 
@@ -90,9 +89,7 @@ def main() -> None:
     sdf = sdf.apply(process_candle, stateful=True)
 
     # Log output
-    sdf = sdf.update(
-        lambda msg: logger.debug(f"Indicators: {msg['pair']} - {len(msg)} fields")
-    )
+    sdf = sdf.update(lambda msg: logger.debug(f"Indicators: {msg['pair']} - {len(msg)} fields"))
 
     # Produce to output topic
     sdf = sdf.to_topic(output_topic)

@@ -12,7 +12,6 @@ from loguru import logger
 from quixstreams import Application
 from quixstreams.models import TimestampType
 
-
 # Global shutdown flag for graceful termination
 _shutdown_requested = False
 

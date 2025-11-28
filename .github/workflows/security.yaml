@@ -1,4 +1,4 @@
-name: Security Scan
+name: Security & Quality
 
 on:
   push:
@@ -7,6 +7,9 @@ on:
     branches: [main, master]
 
 jobs:
+  # ============================================
+  # SECRET SCANNING
+  # ============================================
   gitleaks:
     name: Gitleaks Secret Scan
     runs-on: ubuntu-latest
@@ -56,3 +59,249 @@ jobs:
             exit 1
           fi
           echo "No secrets detected"
+
+  # ============================================
+  # PYTHON SECURITY (SAST)
+  # ============================================
+  bandit:
+    name: Bandit Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Bandit
+        run: pip install bandit
+
+      - name: Run Bandit
+        run: bandit -r services/ -c pyproject.toml -f json -o bandit-report.json || true
+
+      - name: Check Bandit Results
+        run: |
+          if [ -f bandit-report.json ]; then
+            HIGH=$(jq '.metrics._totals."SEVERITY.HIGH"' bandit-report.json)
+            CRITICAL=$(jq '.metrics._totals."SEVERITY.CRITICAL" // 0' bandit-report.json)
+            if [ "$HIGH" -gt 0 ] || [ "$CRITICAL" -gt 0 ]; then
+              echo "::error::High/Critical security issues found!"
+              cat bandit-report.json
+              exit 1
+            fi
+          fi
+          echo "No critical security issues"
+
+  semgrep:
+    name: Semgrep SAST
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Semgrep Scan
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: auto
+
+  pip-audit:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Run pip-audit
+        run: |
+          pip-audit --strict --desc || echo "::warning::Vulnerabilities found in dependencies"
+
+  # ============================================
+  # CONTAINER SECURITY
+  # ============================================
+  trivy:
+    name: Trivy Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Trivy Filesystem Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+          ignore-unfixed: true
+
+  hadolint:
+    name: Dockerfile Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Find Dockerfiles
+        id: dockerfiles
+        run: |
+          FILES=$(find . -name "Dockerfile*" -type f | tr '\n' ' ')
+          echo "files=$FILES" >> $GITHUB_OUTPUT
+
+      - name: Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        if: steps.dockerfiles.outputs.files != ''
+        with:
+          dockerfile: ${{ steps.dockerfiles.outputs.files }}
+          ignore: DL3008,DL3013
+
+  # ============================================
+  # KUBERNETES SECURITY
+  # ============================================
+  kube-linter:
+    name: Kubernetes Manifest Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Kube Linter
+        uses: stackrox/kube-linter-action@v1
+        with:
+          directory: deployments/
+          config: .kube-linter.yaml
+        continue-on-error: true
+
+  # ============================================
+  # TYPE CHECKING
+  # ============================================
+  mypy:
+    name: Type Checking
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install mypy pydantic pydantic-settings types-requests
+
+      - name: Run mypy
+        run: mypy services/ --ignore-missing-imports --no-error-summary
+
+  # ============================================
+  # CODE QUALITY
+  # ============================================
+  ruff:
+    name: Ruff Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Ruff
+        run: pip install ruff
+
+      - name: Run Ruff Check
+        run: ruff check services/
+
+      - name: Run Ruff Format Check
+        run: ruff format --check services/
+
+  vulture:
+    name: Dead Code Detection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Vulture
+        run: pip install vulture
+
+      - name: Run Vulture
+        run: vulture services/ --min-confidence 80
+        continue-on-error: true
+
+  # ============================================
+  # YAML & SHELL
+  # ============================================
+  yamllint:
+    name: YAML Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Run yamllint
+        run: yamllint -c .yamllint.yaml .
+
+  shellcheck:
+    name: Shell Script Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Find shell scripts
+        id: scripts
+        run: |
+          SCRIPTS=$(find . -name "*.sh" -type f | tr '\n' ' ')
+          echo "scripts=$SCRIPTS" >> $GITHUB_OUTPUT
+
+      - name: ShellCheck
+        if: steps.scripts.outputs.scripts != ''
+        uses: ludeeus/action-shellcheck@master
+        with:
+          severity: warning
+
+  # ============================================
+  # TESTS
+  # ============================================
+  tests:
+    name: Tests with Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync --all-packages --dev
+
+      - name: Run tests with coverage
+        run: |
+          uv run pytest --cov=services --cov-report=xml --cov-fail-under=80
+        continue-on-error: true
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.xml
+          fail_ci_if_error: false

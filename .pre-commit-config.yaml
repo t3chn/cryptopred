@@ -1,11 +1,12 @@
 repos:
-  # Secret scanning - BLOCKS commits with secrets
+  # ============================================
+  # SECRET SCANNING
+  # ============================================
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.21.2
     hooks:
       - id: gitleaks
 
-  # Detect hardcoded secrets
   - repo: https://github.com/Yelp/detect-secrets
     rev: v1.5.0
     hooks:
@@ -13,18 +14,100 @@ repos:
         args: ['--baseline', '.secrets.baseline']
         exclude: package.lock.json
 
-  # Check for private keys
+  # ============================================
+  # SECURITY (SAST)
+  # ============================================
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.10
+    hooks:
+      - id: bandit
+        args: ["-c", "pyproject.toml", "-r"]
+        files: ^services/
+
+  - repo: https://github.com/returntocorp/semgrep
+    rev: v1.99.0
+    hooks:
+      - id: semgrep
+        args: ['--config', 'auto']
+        files: ^services/
+
+  # ============================================
+  # TYPE CHECKING
+  # ============================================
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - pydantic>=2.0
+          - pydantic-settings>=2.0
+          - types-requests
+          - types-PyYAML
+        args: ["--ignore-missing-imports", "--no-error-summary", "--explicit-package-bases", "--config-file=pyproject.toml"]
+        files: ^services/
+        exclude: /tests/
+
+  # ============================================
+  # DOCKER & K8S
+  # ============================================
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint-docker
+        args: ["--ignore", "DL3008", "--ignore", "DL3013", "--ignore", "DL3015"]
+
+  # ============================================
+  # YAML & SHELL
+  # ============================================
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: ["-c", ".yamllint.yaml"]
+        files: \.(yaml|yml)$
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        args: ["--severity=warning"]
+
+  # ============================================
+  # CODE QUALITY
+  # ============================================
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
       - id: detect-private-key
       - id: check-added-large-files
         args: ['--maxkb=1000']
+      - id: check-yaml
+        args: ['--unsafe']
+      - id: check-json
+      - id: check-toml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-merge-conflict
 
-  # Code quality
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.14.6
     hooks:
       - id: ruff-check
         args: [--fix]
       - id: ruff-format
+
+  # ============================================
+  # DEAD CODE & DOCS
+  # ============================================
+  - repo: https://github.com/jendrikseipp/vulture
+    rev: v2.13
+    hooks:
+      - id: vulture
+        args: ["services/", ".vulture_whitelist.py", "--min-confidence", "80"]
+
+  - repo: https://github.com/econchick/interrogate
+    rev: 1.7.0
+    hooks:
+      - id: interrogate
+        args: ["-vv", "--fail-under=50", "--ignore-init-method"]
+        files: ^services/

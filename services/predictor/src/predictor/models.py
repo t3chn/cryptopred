@@ -1,7 +1,5 @@
 """Model definitions with hyperparameter tuning."""
 
-from typing import Optional
-
 import numpy as np
 import optuna
 import pandas as pd
@@ -35,10 +33,10 @@ class HuberRegressorWithHyperparameterTuning:
     def __init__(self):
         """Initialize model with default pipeline."""
         self.pipeline = self._get_pipeline()
-        self.hyperparam_search_trials: Optional[int] = None
+        self.hyperparam_search_trials: int | None = None
         self.hyperparam_splits: int = 3
 
-    def _get_pipeline(self, model_hyperparams: Optional[dict] = None) -> Pipeline:
+    def _get_pipeline(self, model_hyperparams: dict | None = None) -> Pipeline:
         """Create sklearn pipeline with preprocessing and model.
 
         Args:
@@ -48,9 +46,7 @@ class HuberRegressorWithHyperparameterTuning:
             sklearn Pipeline
         """
         if model_hyperparams is None:
-            return Pipeline(
-                steps=[("preprocessor", StandardScaler()), ("model", HuberRegressor())]
-            )
+            return Pipeline(steps=[("preprocessor", StandardScaler()), ("model", HuberRegressor())])
         return Pipeline(
             steps=[
                 ("preprocessor", StandardScaler()),
@@ -83,9 +79,7 @@ class HuberRegressorWithHyperparameterTuning:
             logger.info("Fitting with default hyperparameters")
             self.pipeline.fit(X, y)
         else:
-            logger.info(
-                f"Running hyperparameter search with {hyperparam_search_trials} trials"
-            )
+            logger.info(f"Running hyperparameter search with {hyperparam_search_trials} trials")
             best_hyperparams = self._find_best_hyperparams(X, y)
             logger.info(f"Best hyperparameters: {best_hyperparams}")
             self.pipeline = self._get_pipeline(best_hyperparams)
@@ -126,9 +120,7 @@ class HuberRegressorWithHyperparameterTuning:
                 "alpha": trial.suggest_float("alpha", 1e-4, 1.0, log=True),
                 "max_iter": trial.suggest_int("max_iter", 100, 1000),
                 "tol": trial.suggest_float("tol", 1e-5, 1e-2, log=True),
-                "fit_intercept": trial.suggest_categorical(
-                    "fit_intercept", [True, False]
-                ),
+                "fit_intercept": trial.suggest_categorical("fit_intercept", [True, False]),
             }
 
             # TimeSeriesSplit cross-validation
@@ -153,9 +145,7 @@ class HuberRegressorWithHyperparameterTuning:
         # Create and run study
         optuna.logging.set_verbosity(optuna.logging.WARNING)
         study = optuna.create_study(direction="minimize")
-        study.optimize(
-            objective, n_trials=self.hyperparam_search_trials, show_progress_bar=True
-        )
+        study.optimize(objective, n_trials=self.hyperparam_search_trials, show_progress_bar=True)
 
         return study.best_trial.params
 

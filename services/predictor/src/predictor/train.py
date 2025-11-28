@@ -184,9 +184,7 @@ def train(
         # Step 8: Push to registry if better than threshold
         if mae_diff <= max_percentage_diff_mae_wrt_baseline:
             logger.info(f"Model improvement {-mae_diff:.4f} exceeds threshold")
-            model_registry_name = get_model_name(
-                pair, candle_seconds, prediction_horizon_seconds
-            )
+            model_registry_name = get_model_name(pair, candle_seconds, prediction_horizon_seconds)
             push_model(model, X_test, model_registry_name)
             logger.info("Model pushed to registry")
         else:

@@ -1,6 +1,6 @@
 """MLflow model registry utilities."""
 
-from typing import Any, Optional
+from typing import Any
 
 import mlflow
 import pandas as pd
@@ -8,9 +8,7 @@ from loguru import logger
 from mlflow.models import infer_signature
 
 
-def get_model_name(
-    pair: str, candle_seconds: int, prediction_horizon_seconds: int
-) -> str:
+def get_model_name(pair: str, candle_seconds: int, prediction_horizon_seconds: int) -> str:
     """Generate standardized model name.
 
     Args:
@@ -26,7 +24,7 @@ def get_model_name(
 
 def load_model(
     model_name: str,
-    model_version: Optional[str] = "latest",
+    model_version: str | None = "latest",
 ) -> tuple[Any, list[str]]:
     """Load model from MLflow registry.
 

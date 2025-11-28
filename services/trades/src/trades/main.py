@@ -13,7 +13,6 @@ from quixstreams import Application
 
 from trades.binance_client import BinanceHistoricalClient, BinanceLiveClient
 
-
 # Global shutdown flag for graceful termination
 _shutdown_requested = False
 
@@ -47,15 +46,9 @@ async def run_live(
                 trades = await client.get_trades_async()
 
                 for trade in trades:
-                    message = topic.serialize(
-                        key=trade.product_id, value=trade.to_dict()
-                    )
-                    producer.produce(
-                        topic=topic.name, value=message.value, key=message.key
-                    )
-                    logger.debug(
-                        f"Trade pushed to Kafka: {trade.product_id} @ {trade.price}"
-                    )
+                    message = topic.serialize(key=trade.product_id, value=trade.to_dict())
+                    producer.produce(topic=topic.name, value=message.value, key=message.key)
+                    logger.debug(f"Trade pushed to Kafka: {trade.product_id} @ {trade.price}")
 
     except asyncio.CancelledError:
         logger.info("Task cancelled")
@@ -83,9 +76,7 @@ def run_historical(
             for trade in trades:
                 message = topic.serialize(key=trade.product_id, value=trade.to_dict())
                 producer.produce(topic=topic.name, value=message.value, key=message.key)
-                logger.debug(
-                    f"Trade pushed to Kafka: {trade.product_id} @ {trade.price}"
-                )
+                logger.debug(f"Trade pushed to Kafka: {trade.product_id} @ {trade.price}")
 
     logger.info("Historical data ingestion complete")
 
@@ -99,9 +90,7 @@ def main():
     from trades.config import config
 
     if config.live_or_historical == "live":
-        logger.info(
-            f"Starting live data ingestion for {len(config.product_ids)} symbols"
-        )
+        logger.info(f"Starting live data ingestion for {len(config.product_ids)} symbols")
         client = BinanceLiveClient(config)
         asyncio.run(
             run_live(
@@ -124,9 +113,7 @@ def main():
         )
 
     else:
-        raise ValueError(
-            'Invalid value for live_or_historical. Must be "live" or "historical".'
-        )
+        raise ValueError('Invalid value for live_or_historical. Must be "live" or "historical".')
 
 
 if __name__ == "__main__":

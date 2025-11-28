@@ -28,7 +28,7 @@ class Trade(BaseModel):
         Convert Unix timestamp in seconds to ISO 8601 format string with UTC timezone
         Example: "2025-04-24T11:35:42.856851Z"
         """
-        dt = datetime.datetime.fromtimestamp(timestamp_sec, tz=datetime.timezone.utc)
+        dt = datetime.datetime.fromtimestamp(timestamp_sec, tz=datetime.UTC)
         return dt.isoformat().replace("+00:00", "Z")
 
     @staticmethod

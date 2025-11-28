@@ -1,7 +1,6 @@
 """Tests for candle aggregation functions."""
 
 import pytest
-
 from candles.main import init_candle, update_candle
 
 
