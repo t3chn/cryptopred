@@ -1,0 +1,51 @@
+# Gitleaks configuration
+# https://github.com/gitleaks/gitleaks
+
+title = "Cryptopred Secret Scanner"
+
+[extend]
+# Use default rules
+useDefault = true
+
+# Custom rules for crypto/ML project
+[[rules]]
+id = "openai-api-key"
+description = "OpenAI API Key"
+regex = '''sk-[a-zA-Z0-9_-]{20,}'''
+tags = ["key", "openai"]
+
+[[rules]]
+id = "cryptopanic-api-key"
+description = "Cryptopanic API Key"
+regex = '''[a-f0-9]{40}'''
+tags = ["key", "cryptopanic"]
+[rules.allowlist]
+description = "Allow git commit hashes"
+regexes = ['''[a-f0-9]{40}''']
+paths = ['''.git/''', '''\.git/''']
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)(api[_-]?key|apikey|secret[_-]?key)\s*[=:]\s*['"]?([a-zA-Z0-9_\-]{16,})['"]?'''
+tags = ["key", "generic"]
+
+[[rules]]
+id = "password-in-url"
+description = "Password in URL"
+regex = '''[a-zA-Z]{3,10}://[^/\s:@]{3,20}:[^/\s:@]{3,20}@'''
+tags = ["password", "url"]
+
+# Files to ignore
+[allowlist]
+description = "Global allowlist"
+paths = [
+    '''.gitleaks.toml''',
+    '''\.secrets\.baseline''',
+    '''go\.sum''',
+    '''package-lock\.json''',
+    '''yarn\.lock''',
+    '''Cargo\.lock''',
+    '''uv\.lock''',
+    '''\.env\.example''',
+]
