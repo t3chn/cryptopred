@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prediction-api
+  namespace: cryptopred
+  labels:
+    app: prediction-api
+    component: api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: prediction-api
+  template:
+    metadata:
+      labels:
+        app: prediction-api
+        component: api
+    spec:
+      containers:
+        - name: api
+          image: prediction-api:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: API_PORT
+              value: "3000"
+            - name: PG_HOST
+              value: "risingwave.risingwave.svc.cluster.local"
+            - name: PG_PORT
+              value: "4567"
+            - name: PG_DATABASE
+              value: "dev"
+            - name: PG_USER
+              value: "root"
+            - name: PG_PASSWORD
+              value: ""
+            - name: RUST_LOG
+              value: "prediction_api=info,tower_http=info"
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "10m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 3
+            periodSeconds: 5
+      restartPolicy: Always
