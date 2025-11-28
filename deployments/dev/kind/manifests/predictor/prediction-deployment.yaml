@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: predictor
+  namespace: cryptopred
+  labels:
+    app: predictor
+    component: ml
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: predictor
+  template:
+    metadata:
+      labels:
+        app: predictor
+        component: ml
+    spec:
+      containers:
+        - name: predictor
+          image: predictor:latest
+          imagePullPolicy: Never
+          command: ["predict"]
+          envFrom:
+            - configMapRef:
+                name: predictor-config
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+      restartPolicy: Always
