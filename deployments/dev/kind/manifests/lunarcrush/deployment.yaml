@@ -1,0 +1,59 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: lunarcrush-backfill
+  labels:
+    app: lunarcrush
+    component: backfill
+spec:
+  schedule: "0 */6 * * *"  # Every 6 hours
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: lunarcrush
+            component: backfill
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+          containers:
+            - name: lunarcrush-backfill
+              image: lunarcrush:latest
+              imagePullPolicy: IfNotPresent
+              command: ["lunarcrush-backfill"]
+              securityContext:
+                allowPrivilegeEscalation: false
+              envFrom:
+                - configMapRef:
+                    name: lunarcrush-config
+                - secretRef:
+                    name: lunarcrush-secrets
+              resources:
+                requests:
+                  memory: "256Mi"
+                  cpu: "100m"
+                limits:
+                  memory: "512Mi"
+                  cpu: "500m"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lunarcrush-config
+  labels:
+    app: lunarcrush
+data:
+  KAFKA_BROKER_ADDRESS: "kafka-kafka-bootstrap.kafka.svc.cluster.local:9092"
+  KAFKA_TOPIC_NAME: "lunarcrush_metrics"
+  LUNARCRUSH_COINS: "BTC,ETH,SOL,BNB,XRP,ADA,DOGE,AVAX,DOT,MATIC"
+  LUNARCRUSH_BUCKET: "hour"
+  LUNARCRUSH_LAST_N_DAYS: "7"
+  LIVE_OR_HISTORICAL: "historical"
