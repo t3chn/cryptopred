@@ -8,7 +8,8 @@ import psycopg2
 from loguru import logger
 from sklearn.metrics import mean_absolute_error
 
-from predictor.data_validation import validate_data, validate_features
+from predictor.data_validation import validate_data
+from predictor.features import add_lunarcrush_features, add_time_features
 from predictor.model_registry import get_model_name, push_model
 from predictor.models import BaselineModel, get_model_obj
 
@@ -67,6 +68,68 @@ def load_ts_data_from_risingwave(
     return df
 
 
+def load_lunarcrush_data_from_risingwave(
+    host: str,
+    port: int,
+    user: str,
+    password: str,
+    database: str,
+    coin: str,
+    training_data_horizon_days: int,
+) -> pd.DataFrame:
+    """Fetch LunarCrush sentiment data from RisingWave.
+
+    Args:
+        host: RisingWave host
+        port: RisingWave port
+        user: Database user
+        password: Database password
+        database: Database name
+        coin: Coin symbol (e.g., "BTC")
+        training_data_horizon_days: Days of historical data
+
+    Returns:
+        DataFrame with LunarCrush metrics
+    """
+    logger.info(f"Loading LunarCrush data for {coin}")
+
+    conn = psycopg2.connect(
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+        database=database,
+    )
+
+    query = f"""
+    SELECT
+        coin,
+        time_ms,
+        sentiment,
+        galaxy_score,
+        alt_rank,
+        interactions,
+        social_dominance,
+        contributors_active,
+        posts_active
+    FROM lunarcrush_metrics
+    WHERE coin = '{coin}'
+      AND to_timestamp(time_ms / 1000) > now() - interval '{training_data_horizon_days} days'
+    ORDER BY time_ms
+    """
+
+    try:
+        df = pd.read_sql(query, conn)
+        logger.info(f"Fetched {len(df)} LunarCrush records")
+    except Exception as e:
+        logger.warning(f"Failed to load LunarCrush data: {e}")
+        df = pd.DataFrame()
+    finally:
+        conn.close()
+
+    return df
+
+
 def train(
     mlflow_tracking_uri: str,
     risingwave_host: str,
@@ -85,6 +148,8 @@ def train(
     hyperparam_search_trials: int,
     model_name: str,
     max_percentage_diff_mae_wrt_baseline: float,
+    use_time_features: bool = False,
+    use_lunarcrush_features: bool = False,
 ) -> None:
     """Train a price prediction model.
 
@@ -113,6 +178,8 @@ def train(
         mlflow.log_param("model_name", model_name)
         mlflow.log_param("hyperparam_search_trials", hyperparam_search_trials)
         mlflow.log_param("features", features)
+        mlflow.log_param("use_time_features", use_time_features)
+        mlflow.log_param("use_lunarcrush_features", use_lunarcrush_features)
 
         # Step 1: Load data
         ts_data = load_ts_data_from_risingwave(
@@ -127,11 +194,52 @@ def train(
             candle_seconds=candle_seconds,
         )
 
+        # Step 1b: Add time features
+        if use_time_features:
+            ts_data = add_time_features(ts_data, timestamp_col="window_start_ms")
+
+        # Step 1c: Add LunarCrush features
+        if use_lunarcrush_features:
+            # Extract coin symbol from pair (BTCUSDT -> BTC)
+            coin = pair.replace("USDT", "").replace("USD", "")
+            lunarcrush_data = load_lunarcrush_data_from_risingwave(
+                host=risingwave_host,
+                port=risingwave_port,
+                user=risingwave_user,
+                password=risingwave_password,
+                database=risingwave_database,
+                coin=coin,
+                training_data_horizon_days=training_data_horizon_days,
+            )
+            ts_data = add_lunarcrush_features(
+                ts_data,
+                lunarcrush_data,
+                timestamp_col="window_start_ms",
+                lc_timestamp_col="time_ms",
+            )
+
+        # Determine final features to use
+        final_features = features.copy()
+        if use_time_features:
+            from predictor.features import get_time_feature_names
+
+            final_features.extend(get_time_feature_names())
+        if use_lunarcrush_features:
+            from predictor.features import get_lunarcrush_feature_names
+
+            # Only add lunarcrush features that exist in the data
+            lc_features = [f for f in get_lunarcrush_feature_names() if f in ts_data.columns]
+            final_features.extend(lc_features)
+
         # Validate features exist
-        validate_features(ts_data, features)
+        available_features = [f for f in final_features if f in ts_data.columns]
+        missing_features = set(final_features) - set(available_features)
+        if missing_features:
+            logger.warning(f"Missing features (will be skipped): {missing_features}")
+        final_features = available_features
 
         # Keep only needed features
-        ts_data = ts_data[features].copy()
+        ts_data = ts_data[final_features].copy()
 
         # Step 2: Add target (future close price)
         shift_periods = prediction_horizon_seconds // candle_seconds
@@ -220,6 +328,8 @@ def main():
         hyperparam_search_trials=config.hyperparam_search_trials,
         model_name=config.model_name,
         max_percentage_diff_mae_wrt_baseline=config.max_percentage_diff_mae_wrt_baseline,
+        use_time_features=config.use_time_features,
+        use_lunarcrush_features=config.use_lunarcrush_features,
     )
 
 
