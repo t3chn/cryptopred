@@ -46,10 +46,7 @@ Before starting, make sure you have:
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 # Install required tools
-brew install docker
-brew install kubectl
-brew install kind
-brew install postgresql  # For psql client
+brew install docker kind kubectl helm postgresql
 ```
 
 #### Linux (Ubuntu/Debian)
@@ -65,6 +62,9 @@ chmod +x kubectl && sudo mv kubectl /usr/local/bin/
 # Install kind
 curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
 chmod +x ./kind && sudo mv ./kind /usr/local/bin/
+
+# Install helm
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
 # Install psql
 sudo apt-get install postgresql-client
@@ -93,10 +93,23 @@ This script will:
 4. Install RisingWave (streaming database)
 5. Apply database schemas
 6. Install MLflow (experiment tracking)
-7. Install Grafana (monitoring)
-8. Deploy application services (trades, predictor)
+7. Install Grafana (monitoring dashboards)
+8. Build and load Docker images for services
+9. Deploy application services (trades, candles, technical-indicators, predictor)
+10. Start port forwarding for all services
 
-The full setup takes about 10-15 minutes. You'll see progress for each step.
+The full setup takes about 10-15 minutes. After completion, all services are immediately accessible:
+
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| Kafka UI | http://localhost:8080 | - |
+| RisingWave | localhost:4567 | user: root |
+| MLflow | http://localhost:5000 | - |
+| Grafana | http://localhost:3000 | admin / grafana |
+
+Grafana dashboards:
+- ML Operations: http://localhost:3000/d/ml-operations-v1
+- Crypto Trading: http://localhost:3000/d/crypto-trading-v1
 
 ### Step 4: Verify Installation
 
@@ -117,6 +130,16 @@ To enable social sentiment features:
 ```
 
 Note: Requires LunarCrush API key (see Configuration section).
+
+### Helper Scripts
+
+| Script | Description |
+|--------|-------------|
+| `create_cluster.sh` | Full cluster setup (one command) |
+| `port-forward.sh` | Restart port forwards if they stop working |
+| `stop-cluster.sh` | Stop and cleanup cluster |
+| `test-e2e-dataflow.sh` | Verify data pipeline is working |
+| `run-backfill.sh` | Deploy backfill services only |
 
 ---
 
@@ -213,25 +236,21 @@ kubectl get pods -A | grep -v Running  # Shows any unhealthy pods
 
 ### Viewing Predictions
 
-1. Port-forward to RisingWave:
-   ```bash
-   kubectl port-forward -n risingwave svc/risingwave 4567:4567
-   ```
+Port forwarding is started automatically. Query predictions:
 
-2. Query predictions:
-   ```bash
-   psql -h localhost -p 4567 -d dev -U root -c "
-   SELECT
-     pair,
-     to_timestamp(timestamp_ms/1000) as time,
-     predicted_price,
-     confidence_lower,
-     confidence_upper
-   FROM predictions
-   ORDER BY timestamp_ms DESC
-   LIMIT 10;
-   "
-   ```
+```bash
+psql -h localhost -p 4567 -d dev -U root -c "
+SELECT
+  pair,
+  to_timestamp(timestamp_ms/1000) as time,
+  predicted_price,
+  confidence_lower,
+  confidence_upper
+FROM predictions
+ORDER BY timestamp_ms DESC
+LIMIT 10;
+"
+```
 
 ### Manual Model Retraining
 
@@ -249,12 +268,7 @@ kubectl logs -f job/predictor-training-manual -n cryptopred
 
 ### Viewing Training Experiments
 
-1. Port-forward to MLflow:
-   ```bash
-   kubectl port-forward -n mlflow svc/mlflow 5000:5000
-   ```
-
-2. Open http://localhost:5000 in your browser
+Port forwarding is started automatically. Open http://localhost:5000 in your browser.
 
 ---
 
@@ -262,26 +276,22 @@ kubectl logs -f job/predictor-training-manual -n cryptopred
 
 ### Grafana Dashboards
 
-1. Port-forward to Grafana:
-   ```bash
-   kubectl port-forward -n monitoring svc/grafana 3000:3000
-   ```
+Port forwarding is started automatically by `create_cluster.sh`. If you need to restart it:
 
-2. Open http://localhost:3000 in your browser
+```bash
+./port-forward.sh
+```
 
-3. Login with:
-   - Username: `admin`
-   - Password: `admin`
-
-4. Navigate to Dashboards > ML > "ML Operations Dashboard"
+Open http://localhost:3000 and login with:
+- Username: `admin`
+- Password: `grafana`
 
 ### Available Dashboards
 
-| Dashboard | Description |
-|-----------|-------------|
-| ML Operations | Data pipeline health, feature quality, model metrics |
-| Kafka | Message throughput, consumer lag, broker health |
-| RisingWave | Query performance, memory usage, streaming metrics |
+| Dashboard | URL | Description |
+|-----------|-----|-------------|
+| ML Operations | http://localhost:3000/d/ml-operations-v1 | Data pipeline health, feature quality, model metrics |
+| Crypto Trading | http://localhost:3000/d/crypto-trading-v1 | Candlestick charts, RSI, MACD, market signals |
 
 ### Key Metrics to Watch
 
@@ -294,12 +304,7 @@ kubectl logs -f job/predictor-training-manual -n cryptopred
 
 ### Kafka UI
 
-1. Port-forward:
-   ```bash
-   kubectl port-forward -n kafka svc/kafka-ui 8080:8080
-   ```
-
-2. Open http://localhost:8080
+Port forwarding is started automatically. Open http://localhost:8080
 
 ---
 
@@ -360,13 +365,10 @@ kubectl logs -f job/predictor-training-manual -n cryptopred
 ### Problem: Cluster won't start
 
 **Solution**:
-1. Delete and recreate:
-   ```bash
-   kind delete cluster --name cryptopred
-   ./create_cluster.sh
-   ```
-
-2. Redeploy all components
+```bash
+./stop-cluster.sh
+./create_cluster.sh
+```
 
 ---
 
@@ -414,10 +416,10 @@ COPY (
 ### How do I stop everything?
 
 ```bash
-# Stop the cluster (preserves data)
-docker stop cryptopred-control-plane
+# Stop and cleanup (deletes cluster and data)
+./stop-cluster.sh
 
-# Or delete completely
+# Or manually:
 kind delete cluster --name cryptopred
 ```
 
