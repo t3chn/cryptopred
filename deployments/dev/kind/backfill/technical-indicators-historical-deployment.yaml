@@ -27,6 +27,8 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
           env:
+            - name: NUMBA_CACHE_DIR
+              value: "/tmp/numba_cache"
             - name: KAFKA_BROKER_ADDRESS
               valueFrom:
                 configMapKeyRef:
@@ -59,4 +61,10 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
+          volumeMounts:
+            - name: state
+              mountPath: /app/state
+      volumes:
+        - name: state
+          emptyDir: {}
       restartPolicy: Always

@@ -146,10 +146,43 @@ install_grafana() {
     chmod +x "${SCRIPT_DIR}/install-grafana.sh"
     "${SCRIPT_DIR}/install-grafana.sh"
 
-    # Apply ML dashboard
+    # Apply datasource and dashboards
+    log_info "Applying Grafana datasource and dashboards..."
+    kubectl apply -f "${SCRIPT_DIR}/manifests/grafana/datasource.yaml"
     kubectl apply -f "${SCRIPT_DIR}/manifests/grafana/ml-dashboard.yaml"
+    kubectl apply -f "${SCRIPT_DIR}/manifests/grafana/dashboard.yaml"
 
     log_success "Grafana installed"
+}
+
+# Build Docker images
+build_images() {
+    log_step "Building Docker Images"
+
+    PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+
+    # Fix file permissions for Docker build
+    log_info "Fixing file permissions..."
+    find "${PROJECT_ROOT}/services" -name "*.py" -exec chmod 644 {} \; 2>/dev/null || true
+    find "${PROJECT_ROOT}/services" -name "*.yaml" -exec chmod 644 {} \; 2>/dev/null || true
+    find "${PROJECT_ROOT}/services" -name "*.yml" -exec chmod 644 {} \; 2>/dev/null || true
+    find "${PROJECT_ROOT}/services" -name "*.toml" -exec chmod 644 {} \; 2>/dev/null || true
+
+    for service in trades candles technical-indicators; do
+        log_info "Building ${service} image..."
+        docker build --build-arg SERVICE_NAME=${service} \
+            -f "${PROJECT_ROOT}/docker/Dockerfile.service" \
+            -t ${service}:latest \
+            "${PROJECT_ROOT}" || {
+            echo "Failed to build ${service} image"
+            exit 1
+        }
+
+        log_info "Loading ${service} image into Kind..."
+        kind load docker-image ${service}:latest --name cryptopred
+    done
+
+    log_success "Docker images built and loaded"
 }
 
 # Deploy application services
@@ -172,6 +205,24 @@ deploy_services() {
     log_success "Application services deployed"
 }
 
+# Start port forwarding
+start_port_forwards() {
+    log_step "Starting Port Forwards"
+
+    # Kill any existing port forwards
+    pkill -f "kubectl port-forward" 2>/dev/null || true
+    sleep 1
+
+    # Start port forwards in background
+    kubectl port-forward -n kafka svc/kafka-ui 8080:8080 &>/dev/null &
+    kubectl port-forward -n risingwave svc/risingwave 4567:4567 &>/dev/null &
+    kubectl port-forward -n mlflow svc/mlflow 5000:5000 &>/dev/null &
+    kubectl port-forward -n monitoring svc/grafana 3000:3000 &>/dev/null &
+
+    sleep 3
+    log_success "Port forwards started"
+}
+
 # Print summary
 print_summary() {
     log_step "Setup Complete!"
@@ -183,20 +234,25 @@ print_summary() {
     echo "  - RisingWave (streaming database)"
     echo "  - MLflow (experiment tracking)"
     echo "  - Grafana (monitoring)"
-    echo "  - Trades service (data ingestion)"
-    echo "  - Predictor (ML training & inference)"
+    echo "  - Backfill services (trades, candles, technical-indicators)"
     echo ""
-    echo "Access services:"
-    echo "  Kafka UI:   kubectl port-forward -n kafka svc/kafka-ui 8080:8080"
-    echo "  RisingWave: kubectl port-forward -n risingwave svc/risingwave 4567:4567"
-    echo "  MLflow:     kubectl port-forward -n mlflow svc/mlflow-tracking 5000:80"
-    echo "  Grafana:    kubectl port-forward -n monitoring svc/grafana 3000:80"
+    echo "Services available at:"
+    echo "  Kafka UI:   http://localhost:8080"
+    echo "  RisingWave: localhost:4567 (psql -h localhost -p 4567 -d dev -U root)"
+    echo "  MLflow:     http://localhost:5000"
+    echo "  Grafana:    http://localhost:3000 (admin/grafana)"
     echo ""
-    echo "Verify data flow:"
-    echo "  ./test-e2e-dataflow.sh"
+    echo "Grafana Dashboards:"
+    echo "  ML Operations: http://localhost:3000/d/ml-operations-v1"
+    echo "  Crypto Trading: http://localhost:3000/d/crypto-trading-v1"
     echo ""
-    echo "Trigger model training:"
-    echo "  kubectl create job --from=cronjob/predictor-training predictor-manual -n cryptopred"
+    echo "Useful commands:"
+    echo "  ./test-e2e-dataflow.sh    - Verify data pipeline"
+    echo "  ./port-forward.sh         - Restart port forwards"
+    echo "  ./stop-cluster.sh         - Stop the cluster"
+    echo ""
+    echo "Check backfill progress:"
+    echo "  kubectl logs -n cryptopred -l component=backfill -f"
 }
 
 # Main execution
@@ -213,7 +269,9 @@ main() {
     apply_schemas
     install_mlflow
     install_grafana
+    build_images
     deploy_services
+    start_port_forwards
     print_summary
 }
 

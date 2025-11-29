@@ -30,7 +30,7 @@ data:
               "editorMode": "code",
               "format": "table",
               "rawQuery": true,
-              "rawSql": "SELECT\n  to_timestamp(window_start_ms / 1000) as time,\n  open,\n  high,\n  low,\n  close,\n  volume\nFROM technical_indicators\nWHERE pair = 'BTCUSDT'\n  AND candle_seconds = 60\n  AND window_start_ms >= extract(epoch from now() - interval '3 hours') * 1000\nORDER BY window_start_ms",
+              "rawSql": "SELECT\n  to_timestamp(window_start_ms / 1000) as time,\n  open,\n  high,\n  low,\n  close,\n  volume\nFROM technical_indicators\nWHERE pair = 'BTCUSDT'\n  AND candle_seconds = 60\nORDER BY window_start_ms",
               "refId": "A"
             }
           ],
@@ -63,7 +63,7 @@ data:
               "editorMode": "code",
               "format": "table",
               "rawQuery": true,
-              "rawSql": "SELECT\n  to_timestamp(window_start_ms / 1000) as time,\n  open,\n  high,\n  low,\n  close,\n  volume\nFROM technical_indicators\nWHERE pair = 'ETHUSDT'\n  AND candle_seconds = 60\n  AND window_start_ms >= extract(epoch from now() - interval '3 hours') * 1000\nORDER BY window_start_ms",
+              "rawSql": "SELECT\n  to_timestamp(window_start_ms / 1000) as time,\n  open,\n  high,\n  low,\n  close,\n  volume\nFROM technical_indicators\nWHERE pair = 'ETHUSDT'\n  AND candle_seconds = 60\nORDER BY window_start_ms",
               "refId": "A"
             }
           ],

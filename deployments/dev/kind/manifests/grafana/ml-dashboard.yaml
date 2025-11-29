@@ -30,7 +30,7 @@ data:
               "editorMode": "code",
               "format": "table",
               "rawQuery": true,
-              "rawSql": "SELECT COUNT(*) as total_records FROM technical_indicators WHERE window_start_ms >= extract(epoch from now() - interval '1 hour') * 1000",
+              "rawSql": "SELECT COUNT(*) as total_records FROM technical_indicators",
               "refId": "A"
             }
           ],
@@ -99,7 +99,7 @@ data:
               "editorMode": "code",
               "format": "table",
               "rawQuery": true,
-              "rawSql": "SELECT COUNT(DISTINCT pair) as pairs FROM technical_indicators WHERE window_start_ms >= extract(epoch from now() - interval '1 hour') * 1000",
+              "rawSql": "SELECT COUNT(DISTINCT pair) as pairs FROM technical_indicators",
               "refId": "A"
             }
           ],
@@ -136,7 +136,7 @@ data:
               "editorMode": "code",
               "format": "table",
               "rawQuery": true,
-              "rawSql": "SELECT pair, COUNT(*) as records FROM technical_indicators WHERE window_start_ms >= extract(epoch from now() - interval '1 hour') * 1000 GROUP BY pair ORDER BY records DESC",
+              "rawSql": "SELECT pair, COUNT(*) as records FROM technical_indicators GROUP BY pair ORDER BY records DESC",
               "refId": "A"
             }
           ],
@@ -161,7 +161,7 @@ data:
               "editorMode": "code",
               "format": "time_series",
               "rawQuery": true,
-              "rawSql": "SELECT\n  to_timestamp(window_start_ms / 1000) as time,\n  close as \"Price\",\n  sma_7 as \"SMA 7\",\n  sma_21 as \"SMA 21\"\nFROM technical_indicators\nWHERE pair = 'BTCUSDT'\n  AND candle_seconds = 60\n  AND window_start_ms >= extract(epoch from now() - interval '3 hours') * 1000\nORDER BY window_start_ms",
+              "rawSql": "SELECT\n  to_timestamp(window_start_ms / 1000) as time,\n  close as \"Price\",\n  sma_7 as \"SMA 7\",\n  sma_21 as \"SMA 21\"\nFROM technical_indicators\nWHERE pair = 'BTCUSDT'\n  AND candle_seconds = 60\nORDER BY window_start_ms",
               "refId": "A"
             }
           ],
@@ -192,7 +192,7 @@ data:
               "editorMode": "code",
               "format": "table",
               "rawQuery": true,
-              "rawSql": "SELECT rsi_14 FROM technical_indicators WHERE pair = 'BTCUSDT' AND candle_seconds = 60 AND rsi_14 IS NOT NULL AND window_start_ms >= extract(epoch from now() - interval '24 hours') * 1000",
+              "rawSql": "SELECT rsi_14 FROM technical_indicators WHERE pair = 'BTCUSDT' AND candle_seconds = 60 AND rsi_14 IS NOT NULL",
               "refId": "A"
             }
           ],
@@ -270,7 +270,7 @@ data:
               "editorMode": "code",
               "format": "time_series",
               "rawQuery": true,
-              "rawSql": "SELECT\n  to_timestamp(window_start_ms / 1000) as time,\n  volume as \"BTC Volume\"\nFROM technical_indicators\nWHERE pair = 'BTCUSDT'\n  AND candle_seconds = 60\n  AND window_start_ms >= extract(epoch from now() - interval '6 hours') * 1000\nORDER BY window_start_ms",
+              "rawSql": "SELECT\n  to_timestamp(window_start_ms / 1000) as time,\n  volume as \"BTC Volume\"\nFROM technical_indicators\nWHERE pair = 'BTCUSDT'\n  AND candle_seconds = 60\nORDER BY window_start_ms",
               "refId": "A"
             }
           ],

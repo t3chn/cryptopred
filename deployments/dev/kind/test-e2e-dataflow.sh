@@ -15,17 +15,17 @@ WARN_COUNT=0
 
 pass() {
     echo -e "${GREEN}[PASS]${NC} $1"
-    ((PASS_COUNT++))
+    PASS_COUNT=$((PASS_COUNT + 1))
 }
 
 fail() {
     echo -e "${RED}[FAIL]${NC} $1"
-    ((FAIL_COUNT++))
+    FAIL_COUNT=$((FAIL_COUNT + 1))
 }
 
 warn() {
     echo -e "${YELLOW}[WARN]${NC} $1"
-    ((WARN_COUNT++))
+    WARN_COUNT=$((WARN_COUNT + 1))
 }
 
 echo "========================================"
@@ -57,7 +57,9 @@ fi
 # 3. Check Kafka topics exist
 echo ""
 echo "3. Checking Kafka topics..."
-TOPICS=$(kubectl exec -n kafka kafka-kafka-0 -- bin/kafka-topics.sh --list --bootstrap-server localhost:9092 2>/dev/null || echo "")
+# Find the first Kafka broker pod (may be kafka-kafka-0 or kafka-dual-role-0)
+KAFKA_POD=$(kubectl get pods -n kafka -l strimzi.io/name=kafka-kafka -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+TOPICS=$(kubectl exec -n kafka "$KAFKA_POD" -- bin/kafka-topics.sh --list --bootstrap-server localhost:9092 2>/dev/null || echo "")
 
 check_topic() {
     if echo "$TOPICS" | grep -q "^$1$"; then
@@ -94,11 +96,11 @@ sleep 3
 check_rw_table() {
     local table=$1
     local count
-    count=$(psql -h localhost -p 4567 -d dev -U root -t -c "SELECT COUNT(*) FROM $table" 2>/dev/null | tr -d ' ')
-    if [ -n "$count" ] && [ "$count" -gt 0 ]; then
+    count=$(psql -h localhost -p 4567 -d dev -U root -t -c "SELECT COUNT(*) FROM $table" 2>/dev/null | tr -d ' ' || echo "0")
+    if [ -n "$count" ] && [ "$count" != "0" ] && [ "$count" -gt 0 ] 2>/dev/null; then
         pass "Table '$table' has $count rows"
     else
-        warn "Table '$table' is empty or not found"
+        warn "Table '$table' is empty or not accessible"
     fi
 }
 
